@@ -1,5 +1,10 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
+import {
+  Firestore, collection, doc, addDoc, updateDoc, deleteDoc,
+  onSnapshot, query, orderBy, writeBatch
+} from '@angular/fire/firestore';
+import { Auth, user } from '@angular/fire/auth';
 
 export interface Task {
   id: string;
@@ -20,143 +25,134 @@ export interface Task {
   providedIn: 'root'
 })
 export class TaskService {
-  private readonly STORAGE_KEY = 'tasks-data';
   private tasksSubject = new BehaviorSubject<Task[]>([]);
   public tasks$: Observable<Task[]> = this.tasksSubject.asObservable();
 
-  constructor() {
-    this.loadTasks();
-  }
+  private unsubscribeTasks: (() => void) | null = null;
+  private currentUserId: string | null = null;
 
-  /**
-   * Load tasks from localStorage
-   */
-  private loadTasks(): void {
-    try {
-      const stored = localStorage.getItem(this.STORAGE_KEY);
-      if (stored) {
-        const tasks = JSON.parse(stored);
-        // Convert date strings back to Date objects
-        tasks.forEach((task: Task) => {
-          task.createdAt = new Date(task.createdAt);
-          if (task.dueDate) {
-            task.dueDate = new Date(task.dueDate);
-          }
-          if (task.completedAt) {
-            task.completedAt = new Date(task.completedAt);
-          }
-        });
-        this.tasksSubject.next(tasks);
+  constructor(private firestore: Firestore, private auth: Auth) {
+    user(this.auth).subscribe(firebaseUser => {
+      this.cleanup();
+      if (firebaseUser) {
+        this.currentUserId = firebaseUser.uid;
+        this.subscribeTasks(firebaseUser.uid);
+      } else {
+        this.currentUserId = null;
+        this.tasksSubject.next([]);
       }
-    } catch (error) {
-      console.error('Error loading tasks:', error);
-      this.tasksSubject.next([]);
-    }
+    });
   }
 
-  /**
-   * Save tasks to localStorage
-   */
-  private saveTasks(tasks: Task[]): void {
-    try {
-      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(tasks));
+  private tasksCollectionRef(uid: string) {
+    return collection(this.firestore, `users/${uid}/tasks`);
+  }
+
+  private subscribeTasks(uid: string): void {
+    const q = query(this.tasksCollectionRef(uid), orderBy('createdAt', 'desc'));
+    this.unsubscribeTasks = onSnapshot(q, snapshot => {
+      const tasks: Task[] = snapshot.docs.map(d => this.fromFirestore(d.id, d.data()));
       this.tasksSubject.next(tasks);
-    } catch (error) {
-      console.error('Error saving tasks:', error);
+    }, e => console.error('Failed to listen to tasks:', e));
+  }
+
+  private cleanup(): void {
+    if (this.unsubscribeTasks) {
+      this.unsubscribeTasks();
+      this.unsubscribeTasks = null;
     }
   }
 
-  /**
-   * Get all tasks
-   */
+  private fromFirestore(id: string, data: any): Task {
+    return {
+      id,
+      title: data['title'],
+      description: data['description'] ?? undefined,
+      completed: data['completed'] ?? false,
+      dueDate: data['dueDate']?.toDate?.() ?? (data['dueDate'] ? new Date(data['dueDate']) : undefined),
+      createdAt: data['createdAt']?.toDate?.() ?? new Date(data['createdAt']),
+      completedAt: data['completedAt']?.toDate?.() ?? (data['completedAt'] ? new Date(data['completedAt']) : undefined),
+      priority: data['priority'] ?? 'medium',
+      tags: data['tags'] ?? [],
+      timeTracked: data['timeTracked'] ?? 0,
+      isTimeRunning: data['isTimeRunning'] ?? false,
+      timeStartedAt: data['timeStartedAt'] ?? undefined
+    };
+  }
+
+  private toFirestoreData(task: Partial<Task>): Record<string, any> {
+    const data: Record<string, any> = { ...task };
+    delete data['id'];
+    Object.keys(data).forEach(k => { if (data[k] === undefined) data[k] = null; });
+    return data;
+  }
+
+  private taskDocRef(taskId: string) {
+    if (!this.currentUserId) throw new Error('User not authenticated');
+    return doc(this.firestore, `users/${this.currentUserId}/tasks/${taskId}`);
+  }
+
   getTasks(): Task[] {
     return this.tasksSubject.value;
   }
 
-  /**
-   * Get task by ID
-   */
   getTaskById(id: string): Task | undefined {
     return this.tasksSubject.value.find(task => task.id === id);
   }
 
-  /**
-   * Add a new task
-   */
-  addTask(taskData: Omit<Task, 'id' | 'createdAt' | 'completed'>): Task {
-    const newTask: Task = {
-      id: this.generateId(),
+  addTask(taskData: Omit<Task, 'id' | 'createdAt' | 'completed'>): void {
+    if (!this.currentUserId) return;
+    const newTask = {
       title: taskData.title,
-      description: taskData.description,
+      description: taskData.description ?? null,
       completed: false,
-      dueDate: taskData.dueDate,
+      dueDate: taskData.dueDate ?? null,
       createdAt: new Date(),
-      priority: taskData.priority || 'medium',
-      tags: taskData.tags || []
+      completedAt: null,
+      priority: taskData.priority ?? 'medium',
+      tags: taskData.tags ?? [],
+      timeTracked: 0,
+      isTimeRunning: false,
+      timeStartedAt: null
     };
-
-    const tasks = [...this.tasksSubject.value, newTask];
-    this.saveTasks(tasks);
-    return newTask;
+    addDoc(this.tasksCollectionRef(this.currentUserId), newTask)
+      .catch(e => console.error('Failed to add task:', e));
   }
 
-  /**
-   * Update an existing task
-   */
   updateTask(id: string, updates: Partial<Task>): void {
-    const tasks = this.tasksSubject.value.map(task => {
-      if (task.id === id) {
-        return { ...task, ...updates };
-      }
-      return task;
-    });
-    this.saveTasks(tasks);
+    updateDoc(this.taskDocRef(id), this.toFirestoreData(updates))
+      .catch(e => console.error('Failed to update task:', e));
   }
 
-  /**
-   * Toggle task completion
-   */
   toggleTaskCompletion(id: string): void {
-    const tasks = this.tasksSubject.value.map(task => {
-      if (task.id === id) {
-        const completed = !task.completed;
-        return {
-          ...task,
-          completed,
-          completedAt: completed ? new Date() : undefined
-        };
-      }
-      return task;
-    });
-    this.saveTasks(tasks);
+    const task = this.getTaskById(id);
+    if (!task) return;
+    const completed = !task.completed;
+    updateDoc(this.taskDocRef(id), {
+      completed,
+      completedAt: completed ? new Date() : null
+    }).catch(e => console.error('Failed to toggle task:', e));
   }
 
-  /**
-   * Delete a task
-   */
   deleteTask(id: string): void {
-    const tasks = this.tasksSubject.value.filter(task => task.id !== id);
-    this.saveTasks(tasks);
+    deleteDoc(this.taskDocRef(id))
+      .catch(e => console.error('Failed to delete task:', e));
   }
 
-  /**
-   * Delete all completed tasks
-   */
   deleteCompletedTasks(): void {
-    const tasks = this.tasksSubject.value.filter(task => !task.completed);
-    this.saveTasks(tasks);
+    if (!this.currentUserId) return;
+    const completed = this.tasksSubject.value.filter(t => t.completed);
+    const batch = writeBatch(this.firestore);
+    completed.forEach(t => {
+      batch.delete(doc(this.firestore, `users/${this.currentUserId!}/tasks/${t.id}`));
+    });
+    batch.commit().catch(e => console.error('Failed to delete completed tasks:', e));
   }
 
-  /**
-   * Get tasks by completion status
-   */
   getTasksByStatus(completed: boolean): Task[] {
     return this.tasksSubject.value.filter(task => task.completed === completed);
   }
 
-  /**
-   * Get overdue tasks
-   */
   getOverdueTasks(): Task[] {
     const now = new Date();
     return this.tasksSubject.value.filter(task => {
@@ -165,15 +161,11 @@ export class TaskService {
     });
   }
 
-  /**
-   * Get tasks due today
-   */
   getTasksDueToday(): Task[] {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
-
     return this.tasksSubject.value.filter(task => {
       if (!task.dueDate || task.completed) return false;
       const dueDate = new Date(task.dueDate);
@@ -181,60 +173,36 @@ export class TaskService {
     });
   }
 
-  /**
-   * Export tasks as JSON
-   */
   exportToJson(): string {
     return JSON.stringify(this.tasksSubject.value, null, 2);
   }
 
-  /**
-   * Import tasks from JSON
-   */
   importFromJson(jsonString: string): void {
+    if (!this.currentUserId) return;
     try {
-      const tasks = JSON.parse(jsonString);
-      // Validate and convert dates
-      tasks.forEach((task: Task) => {
-        task.createdAt = new Date(task.createdAt);
-        if (task.dueDate) {
-          task.dueDate = new Date(task.dueDate);
-        }
-        if (task.completedAt) {
-          task.completedAt = new Date(task.completedAt);
-        }
+      const tasks: Task[] = JSON.parse(jsonString);
+      const batch = writeBatch(this.firestore);
+      tasks.forEach(task => {
+        const ref = doc(this.tasksCollectionRef(this.currentUserId!));
+        const { id, ...data } = task;
+        batch.set(ref, this.toFirestoreData(data));
       });
-      this.saveTasks(tasks);
-    } catch (error) {
-      console.error('Error importing tasks:', error);
+      batch.commit().catch(e => console.error('Failed to import tasks:', e));
+    } catch {
       throw new Error('Invalid JSON format');
     }
   }
 
-  /**
-   * Clear all tasks
-   */
   clearAllTasks(): void {
-    this.saveTasks([]);
+    if (!this.currentUserId) return;
+    const batch = writeBatch(this.firestore);
+    this.tasksSubject.value.forEach(t => {
+      batch.delete(doc(this.firestore, `users/${this.currentUserId!}/tasks/${t.id}`));
+    });
+    batch.commit().catch(e => console.error('Failed to clear all tasks:', e));
   }
 
-  /**
-   * Generate unique ID
-   */
-  private generateId(): string {
-    return `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-  }
-
-  /**
-   * Get task statistics
-   */
-  getStatistics(): {
-    total: number;
-    completed: number;
-    pending: number;
-    overdue: number;
-    dueToday: number;
-  } {
+  getStatistics(): { total: number; completed: number; pending: number; overdue: number; dueToday: number; } {
     const tasks = this.tasksSubject.value;
     return {
       total: tasks.length,
@@ -245,66 +213,30 @@ export class TaskService {
     };
   }
 
-  /**
-   * Start time tracking for a task
-   */
   startTimeTracking(id: string): void {
-    // Stop any other running timers first
     const runningTasks = this.tasksSubject.value.filter(t => t.isTimeRunning);
-    if (runningTasks.length > 0) {
-      runningTasks.forEach(task => {
-        this.stopTimeTracking(task.id);
-      });
-    }
-
-    // Start this task's timer
-    const tasks = this.tasksSubject.value.map(task => {
-      if (task.id === id) {
-        return {
-          ...task,
-          isTimeRunning: true,
-          timeStartedAt: Date.now(),
-          timeTracked: task.timeTracked || 0
-        };
-      }
-      return task;
-    });
-    this.saveTasks(tasks);
+    runningTasks.forEach(task => this.stopTimeTracking(task.id));
+    updateDoc(this.taskDocRef(id), {
+      isTimeRunning: true,
+      timeStartedAt: Date.now()
+    }).catch(e => console.error('Failed to start time tracking:', e));
   }
 
-  /**
-   * Stop time tracking for a task
-   */
   stopTimeTracking(id: string): void {
     const task = this.getTaskById(id);
     if (!task || !task.isTimeRunning || !task.timeStartedAt) return;
-
-    // Calculate elapsed time and add to total
     const sessionTime = Math.floor((Date.now() - task.timeStartedAt) / 1000);
     const totalTime = (task.timeTracked || 0) + sessionTime;
-
-    // Update the task
-    const tasks = this.tasksSubject.value.map(t => {
-      if (t.id === id) {
-        return {
-          ...t,
-          isTimeRunning: false,
-          timeStartedAt: undefined,
-          timeTracked: totalTime
-        };
-      }
-      return t;
-    });
-    this.saveTasks(tasks);
+    updateDoc(this.taskDocRef(id), {
+      isTimeRunning: false,
+      timeStartedAt: null,
+      timeTracked: totalTime
+    }).catch(e => console.error('Failed to stop time tracking:', e));
   }
 
-  /**
-   * Toggle time tracking for a task
-   */
   toggleTimeTracking(id: string): void {
     const task = this.getTaskById(id);
     if (!task) return;
-
     if (task.isTimeRunning) {
       this.stopTimeTracking(id);
     } else {
@@ -312,67 +244,39 @@ export class TaskService {
     }
   }
 
-  /**
-   * Get current session time for a running task (in seconds)
-   */
   getCurrentSessionTime(id: string): number {
     const task = this.getTaskById(id);
     if (!task || !task.isTimeRunning || !task.timeStartedAt) return 0;
     return Math.floor((Date.now() - task.timeStartedAt) / 1000);
   }
 
-  /**
-   * Get total tracked time for a task (in seconds)
-   */
   getTotalTrackedTime(id: string): number {
     const task = this.getTaskById(id);
     if (!task) return 0;
-    
     let totalTime = task.timeTracked || 0;
-    
-    // Add current session time if timer is running
     if (task.isTimeRunning && task.timeStartedAt) {
       totalTime += Math.floor((Date.now() - task.timeStartedAt) / 1000);
     }
-    
     return totalTime;
   }
 
-  /**
-   * Reset time tracking for a task
-   */
   resetTimeTracking(id: string): void {
     const task = this.getTaskById(id);
     if (!task) return;
-
-    // Stop timer if running
     if (task.isTimeRunning) {
       this.stopTimeTracking(id);
     }
-
-    // Reset time tracked
-    const tasks = this.tasksSubject.value.map(t => {
-      if (t.id === id) {
-        return {
-          ...t,
-          timeTracked: 0,
-          isTimeRunning: false,
-          timeStartedAt: undefined
-        };
-      }
-      return t;
-    });
-    this.saveTasks(tasks);
+    updateDoc(this.taskDocRef(id), {
+      timeTracked: 0,
+      isTimeRunning: false,
+      timeStartedAt: null
+    }).catch(e => console.error('Failed to reset time tracking:', e));
   }
 
-  /**
-   * Format time as HH:MM:SS
-   */
   formatTime(seconds: number): string {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
-
     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   }
 }
