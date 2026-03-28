@@ -8,6 +8,16 @@
         <h1><span class="brand-orange">TR</span>ack Board</h1>
       </div>
       <div class="header-right">
+        <nav class="header-nav">
+          <button class="nav-btn" [class.active]="currentView === 'dashboard'" (click)="navigateTo('dashboard')">
+            <i class="fas fa-th-large"></i>
+            <span>Dashboard</span>
+          </button>
+          <button class="nav-btn" [class.active]="currentView === 'connections'" (click)="navigateTo('connections')">
+            <i class="fas fa-plug"></i>
+            <span>Connections</span>
+          </button>
+        </nav>
         <button class="btn-logout" (click)="logout()" title="Sign out">
           <i class="fas fa-sign-out-alt"></i>
           <span>Sign Out</span>
@@ -52,5 +62,6 @@
       </div>
     </div>
   </header>
-  <app-dashboard></app-dashboard>
+  <app-dashboard *ngIf="currentView === 'dashboard'"></app-dashboard>
+  <app-connections *ngIf="currentView === 'connections'"></app-connections>
 </main>

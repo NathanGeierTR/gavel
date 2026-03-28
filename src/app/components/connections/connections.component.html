@@ -1,0 +1,208 @@
+<div class="connections-page">
+
+  <div class="connections-header">
+    <h2><i class="fas fa-plug"></i> Connections</h2>
+    <p class="subtitle">Manage API credentials for your dashboard integrations. Credentials are stored in your browser only and never leave your device.</p>
+  </div>
+
+  <div class="connections-grid">
+
+    <!-- ── GitHub AI ─────────────────────────────────────────── -->
+    <div class="connection-card" [class.connected]="githubConnected">
+      <div class="card-header">
+        <div class="service-identity">
+          <i class="fab fa-github card-icon"></i>
+          <div>
+            <h3>GitHub AI Models</h3>
+            <span class="service-description">AI chat, ADO title generation &amp; scrum updates</span>
+          </div>
+        </div>
+        <span class="status-badge" [class.connected]="githubConnected" [class.disconnected]="!githubConnected">
+          <i class="fas" [class.fa-circle-check]="githubConnected" [class.fa-circle-xmark]="!githubConnected"></i>
+          {{ githubConnected ? 'Connected' : 'Not connected' }}
+        </span>
+      </div>
+
+      <div class="card-body">
+        <div class="help-link">
+          <a href="https://github.com/settings/tokens" target="_blank" rel="noopener noreferrer">
+            <i class="fas fa-external-link-alt"></i> github.com/settings/tokens
+          </a>
+          <span class="scope-note">Required scope: <code>models:read</code> (Fine-grained → Models → Read-only)</span>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="github-token">Personal Access Token</label>
+            <input id="github-token" type="password" [(ngModel)]="githubToken"
+                   placeholder="ghp_xxxxxxxxxxxx" class="token-input" autocomplete="off">
+          </div>
+          <div class="form-group form-group--narrow">
+            <label for="github-model">Model</label>
+            <select id="github-model" [(ngModel)]="githubModel">
+              <option *ngFor="let m of githubModels" [value]="m">{{ m }}</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-actions">
+        <button class="btn-save" (click)="saveGitHub()" [disabled]="!githubToken.trim()">
+          <i class="fas" [class.fa-check]="githubSaved" [class.fa-save]="!githubSaved"></i>
+          {{ githubSaved ? 'Saved!' : 'Save' }}
+        </button>
+        <button class="btn-disconnect" (click)="disconnectGitHub()" [disabled]="!githubConnected">
+          <i class="fas fa-unlink"></i> Disconnect
+        </button>
+      </div>
+    </div>
+
+    <!-- ── Azure DevOps ───────────────────────────────────────── -->
+    <div class="connection-card" [class.connected]="adoConnected">
+      <div class="card-header">
+        <div class="service-identity">
+          <i class="fab fa-microsoft card-icon ado-icon"></i>
+          <div>
+            <h3>Azure DevOps</h3>
+            <span class="service-description">Work items, sprints &amp; board tracking</span>
+          </div>
+        </div>
+        <span class="status-badge" [class.connected]="adoConnected" [class.disconnected]="!adoConnected">
+          <i class="fas" [class.fa-circle-check]="adoConnected" [class.fa-circle-xmark]="!adoConnected"></i>
+          {{ adoConnected ? adoProjects.length + ' project' + (adoProjects.length !== 1 ? 's' : '') : 'Not connected' }}
+        </span>
+      </div>
+
+      <div class="card-body">
+        <div class="help-link">
+          <a href="https://dev.azure.com" target="_blank" rel="noopener noreferrer">
+            <i class="fas fa-external-link-alt"></i> dev.azure.com
+          </a>
+          <span class="scope-note">Get a PAT: <strong>User Settings → Personal access tokens</strong> — scope: Work Items (Read)</span>
+        </div>
+
+        <div *ngIf="adoProjects.length > 0" class="project-list">
+          <div class="project-pill" *ngFor="let p of adoProjects">
+            <i class="fas fa-project-diagram"></i>
+            <span>{{ p.organization }} / {{ p.project }}</span>
+          </div>
+        </div>
+
+        <div class="ado-note">
+          <i class="fas fa-info-circle"></i>
+          Full ADO configuration (add/remove projects, columns, filters) is managed in the
+          <strong>Work Items</strong> widget on your dashboard.
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Outlook Calendar ───────────────────────────────────── -->
+    <div class="connection-card" [class.connected]="calendarConnected">
+      <div class="card-header">
+        <div class="service-identity">
+          <i class="fas fa-calendar-alt card-icon calendar-icon"></i>
+          <div>
+            <h3>Outlook Calendar</h3>
+            <span class="service-description">Today's meetings and schedule</span>
+          </div>
+        </div>
+        <span class="status-badge" [class.connected]="calendarConnected" [class.disconnected]="!calendarConnected">
+          <i class="fas" [class.fa-circle-check]="calendarConnected" [class.fa-circle-xmark]="!calendarConnected"></i>
+          {{ calendarConnected ? 'Connected' : 'Not connected' }}
+        </span>
+      </div>
+
+      <div class="card-body">
+        <div class="help-link">
+          <a href="https://developer.microsoft.com/en-us/graph/graph-explorer" target="_blank" rel="noopener noreferrer">
+            <i class="fas fa-external-link-alt"></i> Microsoft Graph Explorer
+          </a>
+          <span class="scope-note">Sign in → consent scope: <code>Calendars.Read</code> → copy your access token</span>
+        </div>
+
+        <div class="form-group">
+          <label for="calendar-token">Microsoft Graph Access Token</label>
+          <textarea id="calendar-token" [(ngModel)]="calendarToken"
+                    placeholder="eyJ0eXAiOiJKV1QiLCJhbGci..." rows="3" class="token-input"
+                    autocomplete="off"></textarea>
+        </div>
+      </div>
+
+      <div class="card-actions">
+        <button class="btn-save" (click)="saveCalendar()" [disabled]="!calendarToken.trim()">
+          <i class="fas" [class.fa-check]="calendarSaved" [class.fa-save]="!calendarSaved"></i>
+          {{ calendarSaved ? 'Saved!' : 'Save' }}
+        </button>
+        <button class="btn-disconnect" (click)="disconnectCalendar()" [disabled]="!calendarConnected">
+          <i class="fas fa-unlink"></i> Disconnect
+        </button>
+      </div>
+    </div>
+
+    <!-- ── Microsoft Teams Presence ──────────────────────────── -->
+    <div class="connection-card" [class.connected]="teamsConnected">
+      <div class="card-header">
+        <div class="service-identity">
+          <i class="fas fa-users card-icon teams-icon"></i>
+          <div>
+            <h3>Microsoft Teams Presence</h3>
+            <span class="service-description">Coworker availability &amp; timezone status</span>
+          </div>
+        </div>
+        <span class="status-badge" [class.connected]="teamsConnected" [class.disconnected]="!teamsConnected">
+          <i class="fas" [class.fa-circle-check]="teamsConnected" [class.fa-circle-xmark]="!teamsConnected"></i>
+          {{ teamsConnected ? 'Connected' : 'Not connected' }}
+        </span>
+      </div>
+
+      <div class="card-body">
+        <div class="help-link">
+          <a href="https://developer.microsoft.com/en-us/graph/graph-explorer" target="_blank" rel="noopener noreferrer">
+            <i class="fas fa-external-link-alt"></i> Microsoft Graph Explorer
+          </a>
+          <span class="scope-note">Sign in → consent scope: <code>Presence.Read.All</code> → copy your access token</span>
+        </div>
+
+        <div class="form-group">
+          <label for="teams-token">Microsoft Graph Access Token</label>
+          <textarea id="teams-token" [(ngModel)]="teamsToken"
+                    placeholder="eyJ0eXAiOiJKV1QiLCJhbGci..." rows="3" class="token-input"
+                    autocomplete="off"></textarea>
+        </div>
+      </div>
+
+      <div class="card-actions">
+        <button class="btn-save" (click)="saveTeams()" [disabled]="!teamsToken.trim()">
+          <i class="fas" [class.fa-check]="teamsSaved" [class.fa-save]="!teamsSaved"></i>
+          {{ teamsSaved ? 'Saved!' : 'Save' }}
+        </button>
+        <button class="btn-disconnect" (click)="disconnectTeams()" [disabled]="!teamsConnected">
+          <i class="fas fa-unlink"></i> Disconnect
+        </button>
+      </div>
+    </div>
+
+    <!-- ── Firebase (read-only) ───────────────────────────────── -->
+    <div class="connection-card connected read-only">
+      <div class="card-header">
+        <div class="service-identity">
+          <i class="fas fa-fire card-icon firebase-icon"></i>
+          <div>
+            <h3>Firebase</h3>
+            <span class="service-description">Authentication &amp; Firestore database</span>
+          </div>
+        </div>
+        <span class="status-badge connected">
+          <i class="fas fa-circle-check"></i> Connected
+        </span>
+      </div>
+      <div class="card-body">
+        <div class="ado-note">
+          <i class="fas fa-lock"></i>
+          Firebase credentials are injected at build time via GitHub Secrets and cannot be changed here.
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

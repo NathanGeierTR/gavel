@@ -64,8 +64,40 @@
           position: relative;
           display: flex;
           align-items: center;
+          gap: 12px;
           margin-left: auto;
           width: auto;
+
+          .header-nav {
+            display: flex;
+            gap: 4px;
+
+            .nav-btn {
+              display: flex;
+              align-items: center;
+              gap: 6px;
+              background: transparent;
+              border: 1px solid transparent;
+              border-radius: 8px;
+              color: rgba(255, 255, 255, 0.75);
+              cursor: pointer;
+              font-size: 0.875rem;
+              font-weight: 500;
+              padding: 7px 14px;
+              transition: background 0.2s, color 0.2s;
+
+              &:hover {
+                background: rgba(255, 255, 255, 0.12);
+                color: #fff;
+              }
+
+              &.active {
+                background: rgba(255, 255, 255, 0.18);
+                border-color: rgba(255, 255, 255, 0.3);
+                color: #fff;
+              }
+            }
+          }
 
           .btn-logout {
             display: flex;
