@@ -10,6 +10,7 @@ import { AiPrioritySummaryComponent } from './ai-priority-summary/ai-priority-su
 import { TaskTrackerComponent } from './task-tracker/task-tracker.component';
 import { OutlookCalendarComponent } from './outlook-calendar/outlook-calendar.component';
 import { TimekeepingComponent } from './timekeeping/timekeeping.component';
+import { JournalWidgetComponent } from './journal-widget/journal-widget.component';
 
 @Component({
   selector: 'app-dashboard',
@@ -25,7 +26,8 @@ import { TimekeepingComponent } from './timekeeping/timekeeping.component';
     AiPrioritySummaryComponent,
     TaskTrackerComponent,
     OutlookCalendarComponent,
-    TimekeepingComponent
+    TimekeepingComponent,
+    JournalWidgetComponent
   ],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'

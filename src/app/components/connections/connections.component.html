@@ -17,10 +17,21 @@
             <span class="service-description">AI chat, ADO title generation &amp; scrum updates</span>
           </div>
         </div>
-        <span class="status-badge" [class.connected]="githubConnected" [class.disconnected]="!githubConnected">
-          <i class="fas" [class.fa-circle-check]="githubConnected" [class.fa-circle-xmark]="!githubConnected"></i>
-          {{ githubConnected ? 'Connected' : 'Not connected' }}
-        </span>
+        <div class="status-container">
+            <span class="status-badge" [class.connected]="githubConnected" [class.disconnected]="!githubConnected">
+            <i class="fas" [class.fa-circle-check]="githubConnected" [class.fa-circle-xmark]="!githubConnected"></i>
+            {{ githubConnected ? 'Connected' : 'Not connected' }}
+            </span>
+            <div class="api-counter-row" *ngIf="githubConnected">
+                <div class="counter-display">
+                <i class="fab fa-github"></i>
+                <span><strong>{{ githubCallsUsed }}</strong> API call{{ githubCallsUsed !== 1 ? 's' : '' }} used</span>
+                </div>
+                <button class="btn-reset-counter" (click)="resetApiCounter()">
+                <i class="fas fa-redo"></i> Reset counter
+                </button>
+            </div>
+        </div>
       </div>
 
       <div class="card-body">

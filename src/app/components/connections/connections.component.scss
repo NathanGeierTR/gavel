@@ -62,6 +62,7 @@
   align-items: flex-start;
   padding: 1.25rem 1.5rem 0;
   gap: 1rem;
+  flex-wrap: wrap;
 }
 
 .service-identity {
@@ -89,10 +90,18 @@
   flex-shrink: 0;
   color: var(--saf-color-text-subtle);
 
-  &.ado-icon   { color: #0078d4; }
-  &.calendar-icon { color: #0078d4; }
+  &.ado-icon   { color: #314b3e; }
+  &.calendar-icon { color: #314b3e; }
   &.teams-icon { color: #6264a7; }
   &.firebase-icon { color: #ff6d00; }
+}
+
+.status-container {
+  align-items: flex-end;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-left: auto;
 }
 
 .status-badge {
@@ -134,7 +143,7 @@
 
   a {
     font-size: 0.85rem;
-    color: var(--saf-color-interactive-default, #0078d4);
+    color: var(--saf-color-interactive-default, #314b3e);
     text-decoration: none;
 
     &:hover { text-decoration: underline; }
@@ -193,7 +202,7 @@
 
     &:focus {
       outline: none;
-      border-color: var(--saf-color-interactive-default, #0078d4);
+      border-color: var(--saf-color-interactive-default, #314b3e);
       box-shadow: 0 0 0 3px rgba(0, 120, 212, 0.15);
     }
   }
@@ -240,7 +249,52 @@
   i { margin-right: 0.4rem; }
 }
 
-// ── Card Actions ────────────────────────────────────────────────
+// ── API counter row ─────────────────────────────────────────────
+
+.api-counter-row {
+  align-items: flex-end;
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding-top: 0;
+  padding-bottom: 0;
+  flex-direction: column;
+
+  .counter-display {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: var(--saf-color-text-default);
+
+    i { color: var(--saf-color-text-subtle); }
+  }
+}
+
+.btn-reset-counter {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.85rem;
+  background: transparent;
+  border: 1.5px solid var(--saf-color-border-default, #ccc);
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--saf-color-text-subtle);
+  transition: border-color 0.15s, color 0.15s;
+
+  &:hover {
+    border-color: #314b3e;
+    color: #314b3e;
+  }
+
+  i { font-size: 0.7rem; }
+}
+
+// ── Card Actions ─────────────────────────────────────────────────
 
 .card-actions {
   display: flex;

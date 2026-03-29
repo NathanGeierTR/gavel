@@ -1,0 +1,91 @@
+<div class="journal-page">
+  <div class="journal-header">
+    <h2><i class="fas fa-book-open"></i> Work Journal</h2>
+    <p class="subtitle">{{ entries.length }} {{ entries.length === 1 ? 'entry' : 'entries' }}</p>
+  </div>
+
+  <div class="new-entry-card">
+    <h3>New Entry</h3>
+    <textarea
+      [(ngModel)]="newEntryText"
+      (keydown)="onKeyDown($event)"
+      placeholder="What's on your mind? (Ctrl+Enter to save)"
+      rows="4"
+      class="entry-textarea"
+      [disabled]="isSubmitting">
+    </textarea>
+    <button class="btn-submit" (click)="submitEntry()" [disabled]="!newEntryText.trim() || isSubmitting">
+      <i class="fas fa-paper-plane"></i>
+      {{ isSubmitting ? 'Saving...' : 'Save Entry' }}
+    </button>
+  </div>
+
+  <div class="entries-list" *ngIf="entries.length > 0">
+    <div class="entry-card" *ngFor="let entry of entries">
+
+      <!-- Edit mode -->
+      <ng-container *ngIf="editingId === entry.id; else viewMode">
+        <div class="edit-form">
+          <textarea
+            [(ngModel)]="editText"
+            (keydown)="onEditKeyDown($event)"
+            rows="4"
+            class="entry-textarea"
+            [disabled]="isSavingEdit">
+          </textarea>
+          <div class="edit-datetime">
+            <label class="datetime-label" for="edit-date-{{entry.id}}">
+              <i class="fas fa-calendar-alt"></i>
+              <input id="edit-date-{{entry.id}}" type="date" [(ngModel)]="editDate" class="input-datetime" [disabled]="isSavingEdit" aria-label="Entry date">
+            </label>
+            <label class="datetime-label" for="edit-time-{{entry.id}}">
+              <i class="fas fa-clock"></i>
+              <input id="edit-time-{{entry.id}}" type="time" [(ngModel)]="editTime" class="input-datetime" [disabled]="isSavingEdit" aria-label="Entry time">
+            </label>
+          </div>
+          <div class="edit-actions">
+            <button class="btn-save-edit" (click)="saveEdit()" [disabled]="!editText.trim() || isSavingEdit">
+              <i class="fas fa-check"></i>
+              {{ isSavingEdit ? 'Saving...' : 'Save' }}
+            </button>
+            <button class="btn-cancel-edit" (click)="cancelEdit()" [disabled]="isSavingEdit">
+              <i class="fas fa-times"></i>
+              Cancel
+            </button>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- View mode -->
+      <ng-template #viewMode>
+        <div class="entry-meta">
+          <span class="entry-date">
+            <i class="fas fa-clock"></i>
+            {{ entry.timestamp | date:'EEEE, MMMM d, y' }}
+          </span>
+          <span class="entry-time">{{ entry.timestamp | date:'h:mm a' }}</span>
+          <button
+            class="btn-edit"
+            (click)="startEdit(entry)"
+            aria-label="Edit entry">
+            <i class="fas fa-pencil-alt"></i>
+          </button>
+          <button
+            class="btn-delete"
+            (click)="deleteEntry(entry.id)"
+            [disabled]="deletingId === entry.id"
+            aria-label="Delete entry">
+            <i class="fas fa-trash-alt"></i>
+          </button>
+        </div>
+        <p class="entry-body">{{ entry.text }}</p>
+      </ng-template>
+
+    </div>
+  </div>
+
+  <div class="empty-state" *ngIf="entries.length === 0">
+    <i class="fas fa-book-open"></i>
+    <p>No journal entries yet. Write your first entry above.</p>
+  </div>
+</div>

@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { DashboardComponent } from './components/dashboard/dashboard.component';
 import { LoginComponent } from './components/login/login.component';
 import { ConnectionsComponent } from './components/connections/connections.component';
+import { JournalComponent } from './components/journal/journal.component';
 import { GitHubAIService, RateLimitInfo } from './services/github-ai.service';
 import { AuthService } from './services/auth.service';
 import { Subscription } from 'rxjs';
@@ -12,7 +13,7 @@ import { User } from '@angular/fire/auth';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, DashboardComponent, LoginComponent, ConnectionsComponent, CommonModule],
+  imports: [RouterOutlet, DashboardComponent, LoginComponent, ConnectionsComponent, JournalComponent, CommonModule],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
@@ -23,7 +24,7 @@ export class AppComponent implements OnInit, OnDestroy {
   showSetupPrompt = false;
   currentUser: User | null = null;
   authLoaded = false;
-  currentView: 'dashboard' | 'connections' = 'dashboard';
+  currentView: 'dashboard' | 'connections' | 'journal' = 'dashboard';
   private subscriptions = new Subscription();
 
   constructor(public githubAIService: GitHubAIService, private authService: AuthService) {}
@@ -94,7 +95,7 @@ export class AppComponent implements OnInit, OnDestroy {
     this.authService.logout().subscribe();
   }
 
-  navigateTo(view: 'dashboard' | 'connections') {
+  navigateTo(view: 'dashboard' | 'connections' | 'journal') {
     this.currentView = view;
     this.showSetupPrompt = false;
   }

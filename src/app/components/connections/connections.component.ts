@@ -19,6 +19,7 @@ export class ConnectionsComponent implements OnInit {
   githubModels: string[] = [];
   githubConnected = false;
   githubSaved = false;
+  githubCallsUsed = 0;
 
   // Outlook Calendar
   calendarToken = '';
@@ -50,6 +51,7 @@ export class ConnectionsComponent implements OnInit {
     this.githubModel = localStorage.getItem('github-ai-model') || 'gpt-4o';
     this.githubConnected = !!this.githubToken;
     this.githubModels = this.aiService.getAvailableModels();
+    this.aiService.rateLimit$.subscribe(info => (this.githubCallsUsed = info.callsUsed));
 
     // Outlook Calendar
     this.calendarToken = localStorage.getItem('outlook-calendar-token') || '';
@@ -86,6 +88,12 @@ export class ConnectionsComponent implements OnInit {
     this.aiService.clearConfiguration();
     this.githubToken = '';
     this.githubConnected = false;
+  }
+
+  resetApiCounter(): void {
+    if (confirm('Reset GitHub AI call counter to 0?')) {
+      this.aiService.resetRateLimitInfo();
+    }
   }
 
   // Outlook Calendar

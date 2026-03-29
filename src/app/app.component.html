@@ -1,67 +1,76 @@
 <app-login *ngIf="authLoaded && currentUser === null"></app-login>
 
-<main class="main" *ngIf="authLoaded && currentUser !== null">
-  <header class="header" [style.background-image]="'url(assets/green-swirl.png)'">
-    <div class="header-container">
-      <div class="header-left">
-        <img src="assets/tr-logo.svg" width="320" alt="Thomson Reuters Logo" class="tr-logo">
-        <h1><span class="brand-orange">TR</span>ack Board</h1>
-      </div>
-      <div class="header-right">
-        <nav class="header-nav">
-          <button class="nav-btn" [class.active]="currentView === 'dashboard'" (click)="navigateTo('dashboard')">
-            <i class="fas fa-th-large"></i>
-            <span>Dashboard</span>
-          </button>
-          <button class="nav-btn" [class.active]="currentView === 'connections'" (click)="navigateTo('connections')">
-            <i class="fas fa-plug"></i>
-            <span>Connections</span>
-          </button>
-        </nav>
-        <button class="btn-logout" (click)="logout()" title="Sign out">
-          <i class="fas fa-sign-out-alt"></i>
-          <span>Sign Out</span>
-        </button>
-      </div>
+<div class="app-shell" *ngIf="authLoaded && currentUser !== null">
+
+  <!-- Side navigation -->
+  <nav class="sidenav">
+    <div class="sidenav-items">
+      <button class="sidenav-btn" [class.active]="currentView === 'dashboard'"
+              (click)="navigateTo('dashboard')" data-label="Dashboard" aria-label="Dashboard">
+        <i class="fas fa-house"></i>
+      </button>
+
+      <button class="sidenav-btn" [class.active]="currentView === 'connections'"
+              (click)="navigateTo('connections')" data-label="Connections" aria-label="Connections">
+        <i class="fas fa-plug"></i>
+      </button>
+
+      <button class="sidenav-btn" [class.active]="currentView === 'journal'"
+              (click)="navigateTo('journal')" data-label="Journal" aria-label="Journal">
+        <i class="fas fa-book-open"></i>
+      </button>
     </div>
-    
-    <!-- GitHub AI Status Badge - Fixed Top Right -->
-    <div class="ai-status-badge" 
-         [class.connected]="isAIServiceValid && !isRateLimitExceeded"
-         [class.disconnected]="!isAIConnected || hasTokenError"
-         [class.exceeded]="isAIServiceValid && isRateLimitExceeded"
-         (click)="toggleSetupPrompt()">
-      <div class="badge-content">
+
+    <div class="sidenav-bottom">
+      <!-- GitHub AI status -->
+      <button class="sidenav-btn ai-status-btn"
+              [class.ai-connected]="isAIServiceValid && !isRateLimitExceeded"
+              [class.ai-exceeded]="isAIServiceValid && isRateLimitExceeded"
+              [class.ai-disconnected]="!isAIConnected || hasTokenError"
+              (click)="navigateTo('connections')"
+              [attr.aria-label]="isAIServiceValid ? 'GitHub AI: ' + (rateLimit?.callsUsed ?? 0) + ' calls used' : 'GitHub AI not configured'"
+              [attr.data-label]="isAIServiceValid ? 'AI: ' + (rateLimit?.callsUsed ?? 0) + ' calls' : 'GitHub AI not configured'">
         <i class="fab fa-github"></i>
-        <span class="status-label">AI API</span>
-        <i *ngIf="isAIServiceValid && !isRateLimitExceeded" class="fas fa-check-circle status-icon connected"></i>
-        <i *ngIf="isAIServiceValid && isRateLimitExceeded" class="fas fa-circle-exclamation status-icon exceeded"></i>
-        <i *ngIf="!isAIConnected || hasTokenError" class="fas fa-unlink status-icon disconnected"></i>
-        <span *ngIf="isAIServiceValid && rateLimit" class="call-count">
-          {{ rateLimit.callsUsed }} calls
-          <span *ngIf="rateLimit.callsRemaining !== null" class="remaining-count">
-            ({{ rateLimit.callsRemaining }} left)
-          </span>
-          <button class="reset-btn" (click)="resetCallCount($event)" title="Reset call count">
-            <i class="fas fa-redo"></i>
-          </button>
-        </span>
-      </div>
+        <span class="ai-dot"
+              [class.connected]="isAIServiceValid && !isRateLimitExceeded"
+              [class.exceeded]="isAIServiceValid && isRateLimitExceeded"
+              [class.disconnected]="!isAIConnected || hasTokenError"></span>
+      </button>
+
+      <button class="sidenav-btn" (click)="logout()" data-label="Sign Out" aria-label="Sign Out">
+        <i class="fas fa-sign-out-alt"></i>
+      </button>
     </div>
-    
+
     <!-- Setup Prompt Popover -->
     <div class="setup-prompt" *ngIf="showSetupPrompt && (!isAIConnected || hasTokenError)">
-      <div class="prompt-arrow"></div>
       <div class="prompt-content">
         <i class="fas fa-info-circle"></i>
         <p>{{ hasTokenError ? 'GitHub AI token is invalid or expired.' : 'GitHub AI features are not configured.' }}</p>
-        <button class="btn-primary" (click)="scrollToAIWidget()">
+        <button class="btn-primary" (click)="scrollToAIWidget(); showSetupPrompt = false">
           <i class="fas fa-cog"></i>
           Set Up Now
         </button>
       </div>
     </div>
-  </header>
-  <app-dashboard *ngIf="currentView === 'dashboard'"></app-dashboard>
-  <app-connections *ngIf="currentView === 'connections'"></app-connections>
-</main>
+  </nav>
+
+  <!-- Main content area -->
+  <div class="app-content">
+    <header class="topbar" [style.background-image]="'url(assets/green-swirl.png)'">
+      <div class="topbar-inner">
+        <div class="topbar-title">
+          <img src="assets/tr-logo.svg" height="36" alt="Thomson Reuters Logo" class="tr-logo">
+          <h1><span class="brand-orange">TR</span>ack Board</h1>
+        </div>
+      </div>
+    </header>
+
+    <main class="page-body">
+      <app-dashboard *ngIf="currentView === 'dashboard'"></app-dashboard>
+      <app-connections *ngIf="currentView === 'connections'"></app-connections>
+      <app-journal *ngIf="currentView === 'journal'"></app-journal>
+    </main>
+  </div>
+
+</div>
