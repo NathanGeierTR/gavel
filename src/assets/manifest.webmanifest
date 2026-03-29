@@ -1,0 +1,20 @@
+{
+  "name": "TRack Board",
+  "short_name": "TRack Board",
+  "description": "Work productivity web app",
+  "id": "/track-board/",
+  "start_url": "/track-board/",
+  "scope": "/track-board/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "theme_color": "#314b3e",
+  "background_color": "#ffffff",
+  "icons": [
+    {
+      "src": "assets/TR-app-logo.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
