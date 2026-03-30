@@ -314,7 +314,7 @@
 @media (max-width: 768px) {
   :host {
     --sidenav-width: 0px;
-    --topbar-height: 66px;
+    --topbar-height: calc(66px + env(safe-area-inset-top));
     --mobile-nav-height: 48px;
   }
 
@@ -396,7 +396,7 @@
 
 @media (max-width: 600px) {
   :host {
-    --topbar-height: 56px;
+    --topbar-height: calc(56px + env(safe-area-inset-top));
   }
   .topbar .topbar-title h1 {
     font-size: 1.3rem;
