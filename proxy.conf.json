@@ -1,4 +1,15 @@
 {
+  "/github-api/**": {
+    "target": "https://api.github.com",
+    "secure": true,
+    "changeOrigin": true,
+    "pathRewrite": {
+      "^/github-api": ""
+    },
+    "headers": {
+      "User-Agent": "straight-cash-app"
+    }
+  },
   "/ado-api/**": {
     "target": "https://dev.azure.com",
     "secure": true,

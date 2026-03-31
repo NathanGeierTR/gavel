@@ -164,6 +164,24 @@
   }
 }
 
+.verified-identity {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  color: var(--saf-color-text-secondary, #6b7280);
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: var(--saf-color-semantic-success-subtle, #d1fae5);
+  border: 1px solid var(--saf-color-semantic-success, #10b981);
+
+  .verified-icon {
+    color: var(--saf-color-semantic-success-strong, #065f46);
+  }
+
+  strong { color: var(--saf-color-text-primary, #111827); }
+}
+
 .form-row {
   display: flex;
   gap: 1rem;

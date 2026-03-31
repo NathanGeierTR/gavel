@@ -68,6 +68,58 @@
       </div>
     </div>
 
+    <!-- ── GitHub Pull Requests ──────────────────────────────── -->
+    <div class="connection-card" [class.connected]="githubPrConnected">
+      <div class="card-header">
+        <div class="service-identity">
+          <i class="fab fa-github card-icon"></i>
+          <div>
+            <h3>GitHub Pull Requests</h3>
+            <span class="service-description">PRs assigned to you or awaiting your review</span>
+          </div>
+        </div>
+        <span class="status-badge" [class.connected]="githubPrConnected" [class.disconnected]="!githubPrConnected">
+          <i class="fas" [class.fa-circle-check]="githubPrConnected" [class.fa-circle-xmark]="!githubPrConnected"></i>
+          {{ githubPrConnected ? 'Connected' : 'Not connected' }}
+        </span>
+      </div>
+
+      <div class="card-body">
+        <div class="help-link">
+          <a href="https://github.com/settings/tokens/new?scopes=repo&description=straight-cash-pr-widget" target="_blank" rel="noopener noreferrer">
+            <i class="fas fa-external-link-alt"></i> github.com/settings/tokens
+          </a>
+          <span class="scope-note">Required scope: <code>repo</code> (Classic PAT) or <code>pull_requests:read</code> (Fine-grained)</span>
+        </div>
+
+        <div class="form-group">
+          <label for="github-pr-token">Personal Access Token</label>
+          <input id="github-pr-token" type="password" [(ngModel)]="githubPrToken"
+                 placeholder="ghp_xxxxxxxxxxxx" class="token-input" autocomplete="off">
+        </div>
+
+        <div class="verified-identity" *ngIf="githubPrConnected">
+          <ng-container *ngIf="githubPrVerifiedUsername; else verifying">
+            <i class="fas fa-circle-check verified-icon"></i>
+            Token belongs to <strong>{{ githubPrVerifiedUsername }}</strong>
+          </ng-container>
+          <ng-template #verifying>
+            <i class="fas fa-spinner fa-spin"></i> Verifying token identity…
+          </ng-template>
+        </div>
+      </div>
+
+      <div class="card-actions">
+        <button class="btn-save" (click)="saveGitHubPr()" [disabled]="!githubPrToken.trim()">
+          <i class="fas" [class.fa-check]="githubPrSaved" [class.fa-save]="!githubPrSaved"></i>
+          {{ githubPrSaved ? 'Saved!' : 'Save' }}
+        </button>
+        <button class="btn-disconnect" (click)="disconnectGitHubPr()" [disabled]="!githubPrConnected">
+          <i class="fas fa-unlink"></i> Disconnect
+        </button>
+      </div>
+    </div>
+
     <!-- ── Azure DevOps ───────────────────────────────────────── -->
     <div class="connection-card" [class.connected]="adoConnected">
       <div class="card-header">

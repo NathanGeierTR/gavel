@@ -1,7 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { GitHubAIService } from '../../services/github-ai.service';
+import { GitHubPrService } from '../../services/github-pr.service';
 import { MicrosoftCalendarService } from '../../services/microsoft-calendar.service';
 import { MicrosoftTeamsService } from '../../services/microsoft-teams.service';
 
@@ -12,7 +15,7 @@ import { MicrosoftTeamsService } from '../../services/microsoft-teams.service';
   templateUrl: './connections.component.html',
   styleUrl: './connections.component.scss'
 })
-export class ConnectionsComponent implements OnInit {
+export class ConnectionsComponent implements OnInit, OnDestroy {
   // GitHub AI
   githubToken = '';
   githubModel = 'gpt-4o';
@@ -31,18 +34,32 @@ export class ConnectionsComponent implements OnInit {
   teamsConnected = false;
   teamsSaved = false;
 
+  // GitHub Pull Requests
+  githubPrToken = '';
+  githubPrVerifiedUsername: string | null = null;
+  githubPrConnected = false;
+  githubPrSaved = false;
+
+  private destroy$ = new Subject<void>();
+
   // Azure DevOps (status-only — full config lives in the ADO widget)
   adoConnected = false;
   adoProjects: { organization: string; project: string }[] = [];
 
   constructor(
     private aiService: GitHubAIService,
+    private githubPrService: GitHubPrService,
     private calendarService: MicrosoftCalendarService,
     private teamsService: MicrosoftTeamsService
   ) {}
 
   ngOnInit(): void {
     this.loadStatuses();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   private loadStatuses(): void {
@@ -60,6 +77,13 @@ export class ConnectionsComponent implements OnInit {
     // Microsoft Teams
     this.teamsToken = localStorage.getItem('ms-teams-token') || '';
     this.teamsConnected = !!this.teamsToken;
+
+    // GitHub Pull Requests
+    this.githubPrToken = localStorage.getItem('github-pr-token') || '';
+    this.githubPrConnected = this.githubPrService.isConfigured();
+    this.githubPrService.verifiedUsername$.pipe(takeUntil(this.destroy$)).subscribe(u => {
+      this.githubPrVerifiedUsername = u;
+    });
 
     // Azure DevOps
     try {
@@ -126,5 +150,22 @@ export class ConnectionsComponent implements OnInit {
     this.teamsService.clearAccessToken();
     this.teamsToken = '';
     this.teamsConnected = false;
+  }
+
+  // GitHub Pull Requests
+  saveGitHubPr(): void {
+    const token = this.githubPrToken.trim();
+    if (!token) return;
+    this.githubPrService.initialize(token);
+    this.githubPrConnected = true;
+    this.githubPrSaved = true;
+    setTimeout(() => (this.githubPrSaved = false), 3000);
+  }
+
+  disconnectGitHubPr(): void {
+    this.githubPrService.clearConfiguration();
+    this.githubPrToken = '';
+    this.githubPrVerifiedUsername = null;
+    this.githubPrConnected = false;
   }
 }

@@ -10,6 +10,7 @@ import { TaskTrackerComponent } from './task-tracker/task-tracker.component';
 import { OutlookCalendarComponent } from './outlook-calendar/outlook-calendar.component';
 import { TimekeepingComponent } from './timekeeping/timekeeping.component';
 import { JournalWidgetComponent } from './journal-widget/journal-widget.component';
+import { GithubPrWidgetComponent } from './github-pr-widget/github-pr-widget.component';
 
 @Component({
   selector: 'app-dashboard',
@@ -25,7 +26,8 @@ import { JournalWidgetComponent } from './journal-widget/journal-widget.componen
     TaskTrackerComponent,
     OutlookCalendarComponent,
     TimekeepingComponent,
-    JournalWidgetComponent
+    JournalWidgetComponent,
+    GithubPrWidgetComponent
   ],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'

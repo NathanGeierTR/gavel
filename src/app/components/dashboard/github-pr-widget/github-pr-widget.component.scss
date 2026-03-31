@@ -1,0 +1,526 @@
+.github-pr-widget {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  height: 100%;
+
+  // ── Header ───────────────────────────────────────────────────
+  .widget-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--saf-color-line-subtle);
+
+    .widget-title {
+      margin: 0;
+      font-size: 1.25rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: linear-gradient(
+        135deg,
+        var(--saf-color-brand-orange-400),
+        var(--saf-color-brand-orange-700)
+      );
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+
+      i { font-size: 1.1rem; }
+    }
+
+    .header-badges {
+      display: flex;
+      gap: 6px;
+    }
+  }
+
+  .badge {
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 999px;
+    white-space: nowrap;
+
+    &--open {
+      background: var(--saf-color-semantic-success-subtle, #d1fae5);
+      color: var(--saf-color-semantic-success-strong, #065f46);
+      border: 1px solid var(--saf-color-semantic-success, #10b981);
+    }
+
+    &--draft {
+      background: var(--saf-color-background-muted, #f3f4f6);
+      color: var(--saf-color-text-secondary, #6b7280);
+      border: 1px solid var(--saf-color-line-subtle, #e5e7eb);
+    }
+  }
+
+  // ── Toolbar ──────────────────────────────────────────────────
+  .widget-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .filter-tabs {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+
+  .filter-tab {
+    padding: 4px 10px;
+    font-size: 0.8rem;
+    border: 1px solid var(--saf-color-line-subtle, #e5e7eb);
+    border-radius: 6px;
+    background: transparent;
+    cursor: pointer;
+    color: var(--saf-color-text-secondary, #6b7280);
+    transition: all 0.15s ease;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+
+    &:hover {
+      background: var(--saf-color-background-muted, #f3f4f6);
+      color: var(--saf-color-text-primary, #111827);
+    }
+
+    &.active {
+      background: var(--saf-color-brand-racing-green-600, #166534);
+      color: #fff;
+      border-color: var(--saf-color-brand-racing-green-600, #166534);
+    }
+  }
+
+  .btn-refresh,
+  .btn-debug {
+    padding: 4px 10px;
+    border: 1px solid var(--saf-color-line-subtle, #e5e7eb);
+    border-radius: 6px;
+    background: transparent;
+    cursor: pointer;
+    color: var(--saf-color-text-secondary, #6b7280);
+    transition: all 0.15s ease;
+    font-size: 0.85rem;
+
+    &:hover:not(:disabled) {
+      background: var(--saf-color-background-muted, #f3f4f6);
+      color: var(--saf-color-text-primary, #111827);
+    }
+
+    &:disabled { opacity: 0.5; cursor: not-allowed; }
+  }
+
+  // ── Diagnostics panel ─────────────────────────────────────────
+  .diagnostics-panel {
+    background: #1e1e2e;
+    color: #cdd6f4;
+    border-radius: 8px;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    font-size: 0.78rem;
+  }
+
+  .diag-row {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .diag-key {
+    color: #a6adc8;
+    min-width: 96px;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+
+  code {
+    background: #313244;
+    border-radius: 3px;
+    padding: 1px 5px;
+    font-family: monospace;
+    word-break: break-all;
+    color: #cba6f7;
+
+    &.diag-error { color: #f38ba8; }
+  }
+
+  .diag-hint {
+    margin-top: 4px;
+    padding-top: 6px;
+    border-top: 1px solid #313244;
+    color: #a6adc8;
+    font-size: 0.74rem;
+    line-height: 1.5;
+
+    i { margin-right: 4px; }
+    code { font-size: 0.74rem; }
+  }
+
+  .btn-verify {
+    margin-left: 6px;
+    padding: 1px 8px;
+    border: 1px solid #585b70;
+    border-radius: 4px;
+    background: #313244;
+    color: #cba6f7;
+    font-size: 0.72rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+
+    &:hover { background: #45475a; }
+  }
+
+  // ── Org filter row ────────────────────────────────────────────
+  .org-filter-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .org-icon {
+    font-size: 0.8rem;
+    color: var(--saf-color-text-secondary, #6b7280);
+    flex-shrink: 0;
+  }
+
+  .org-input {
+    flex: 1;
+    min-width: 140px;
+    padding: 4px 8px;
+    font-size: 0.8rem;
+    border: 1px solid var(--saf-color-line-subtle, #e5e7eb);
+    border-radius: 6px;
+    background: var(--saf-color-background-subtle, #fff);
+    color: var(--saf-color-text-primary, #111827);
+    outline: none;
+
+    &:focus { border-color: var(--saf-color-brand-racing-green-600, #166534); }
+  }
+
+  .btn-apply-org {
+    padding: 4px 10px;
+    font-size: 0.8rem;
+    border: 1px solid var(--saf-color-brand-racing-green-600, #166534);
+    border-radius: 6px;
+    background: var(--saf-color-brand-racing-green-600, #166534);
+    color: #fff;
+    cursor: pointer;
+    transition: background 0.15s ease;
+    flex-shrink: 0;
+
+    &:hover:not(:disabled) { background: var(--saf-color-brand-racing-green-700, #14532d); }
+    &:disabled { opacity: 0.4; cursor: not-allowed; }
+  }
+
+  .btn-clear-org {
+    padding: 4px 8px;
+    font-size: 0.8rem;
+    border: 1px solid var(--saf-color-line-subtle, #e5e7eb);
+    border-radius: 6px;
+    background: transparent;
+    cursor: pointer;
+    color: var(--saf-color-text-secondary, #6b7280);
+    flex-shrink: 0;
+
+    &:hover { background: var(--saf-color-background-muted, #f3f4f6); }
+  }
+
+  .active-org-badge {
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: var(--saf-color-brand-racing-green-600, #166534);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+
+  // ── States ───────────────────────────────────────────────────
+  .empty-state,
+  .loading-state,
+  .error-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 32px 16px;
+    text-align: center;
+    color: var(--saf-color-text-secondary, #6b7280);
+
+    .empty-icon {
+      font-size: 2.5rem;
+      opacity: 0.4;
+
+      &.success { color: #10b981; opacity: 0.8; }
+    }
+
+    p { margin: 0; font-weight: 500; }
+    span { font-size: 0.85rem; opacity: 0.75; }
+
+    .fa-spinner { font-size: 1.75rem; }
+    .fa-triangle-exclamation { font-size: 2rem; color: #f59e0b; }
+  }
+
+  .btn-retry {
+    margin-top: 4px;
+    padding: 6px 14px;
+    border: 1px solid var(--saf-color-line-subtle, #e5e7eb);
+    border-radius: 6px;
+    background: transparent;
+    cursor: pointer;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+
+    &:hover { background: var(--saf-color-background-muted, #f3f4f6); }
+  }
+
+  // ── PR List ──────────────────────────────────────────────────
+  .pr-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    overflow-y: auto;
+    max-height: 520px;
+    padding-right: 4px;
+
+    &::-webkit-scrollbar { width: 4px; }
+    &::-webkit-scrollbar-thumb {
+      background: var(--saf-color-line-subtle, #e5e7eb);
+      border-radius: 2px;
+    }
+  }
+
+  .pr-card {
+    border: 1px solid var(--saf-color-line-subtle, #e5e7eb);
+    border-radius: 8px;
+    overflow: hidden;
+    transition: border-color 0.15s ease;
+
+    &:hover { border-color: var(--saf-color-brand-racing-green-400, #4ade80); }
+
+    &--draft {
+      opacity: 0.75;
+      border-style: dashed;
+    }
+
+    &--expanded {
+      border-color: var(--saf-color-brand-racing-green-600, #166534);
+    }
+  }
+
+  // PR summary row
+  .pr-summary {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 12px;
+    cursor: pointer;
+    user-select: none;
+
+    &:hover { background: var(--saf-color-background-muted, #f9fafb); }
+  }
+
+  .pr-state-icon {
+    padding-top: 2px;
+    font-size: 1rem;
+    color: var(--saf-color-semantic-success-strong, #065f46);
+    flex-shrink: 0;
+  }
+
+  .pr-main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .pr-title-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .pr-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--saf-color-text-primary, #111827);
+    line-height: 1.3;
+    word-break: break-word;
+  }
+
+  .pr-draft-tag {
+    font-size: 0.65rem;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: var(--saf-color-background-muted, #f3f4f6);
+    color: var(--saf-color-text-secondary, #6b7280);
+    border: 1px solid var(--saf-color-line-subtle, #e5e7eb);
+    flex-shrink: 0;
+  }
+
+  .pr-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    font-size: 0.75rem;
+    color: var(--saf-color-text-secondary, #6b7280);
+
+    span { display: flex; align-items: center; gap: 3px; }
+
+    .pr-repo { font-weight: 500; }
+    .pr-number { opacity: 0.7; }
+  }
+
+  .pr-labels {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    margin-top: 2px;
+  }
+
+  .pr-label {
+    font-size: 0.65rem;
+    font-weight: 600;
+    padding: 1px 6px;
+    border-radius: 999px;
+    border: 1px solid;
+    white-space: nowrap;
+  }
+
+  .pr-stats {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    padding-top: 2px;
+
+    .stat {
+      font-size: 0.75rem;
+      color: var(--saf-color-text-secondary, #6b7280);
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+  }
+
+  .expand-icon {
+    font-size: 0.7rem;
+    color: var(--saf-color-text-secondary, #6b7280);
+    transition: transform 0.2s ease;
+
+    &.rotated { transform: rotate(180deg); }
+  }
+
+  // PR expanded detail
+  .pr-detail {
+    padding: 12px 14px;
+    border-top: 1px solid var(--saf-color-line-subtle, #e5e7eb);
+    background: var(--saf-color-background-muted, #f9fafb);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .detail-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .detail-section {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .detail-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--saf-color-text-secondary, #6b7280);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .detail-value {
+    font-size: 0.8rem;
+    color: var(--saf-color-text-primary, #111827);
+  }
+
+  .detail-body {
+    font-size: 0.8rem;
+    color: var(--saf-color-text-primary, #111827);
+    margin: 0;
+    white-space: pre-wrap;
+    word-break: break-word;
+    max-height: 120px;
+    overflow-y: auto;
+    line-height: 1.5;
+  }
+
+  .avatar-row {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .avatar-chip {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.8rem;
+    background: var(--saf-color-background-subtle, #fff);
+    border: 1px solid var(--saf-color-line-subtle, #e5e7eb);
+    border-radius: 999px;
+    padding: 2px 8px 2px 2px;
+    color: var(--saf-color-text-primary, #111827);
+  }
+
+  .avatar {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+
+  .btn-view-pr {
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-decoration: none;
+    background: var(--saf-color-brand-racing-green-600, #166534);
+    color: #fff;
+    transition: background 0.15s ease;
+
+    &:hover { background: var(--saf-color-brand-racing-green-700, #14532d); }
+  }
+}
