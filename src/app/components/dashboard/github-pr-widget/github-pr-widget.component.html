@@ -1,0 +1,181 @@
+<div class="github-pr-widget">
+
+  <!-- Header -->
+  <div class="widget-header">
+    <h2 class="widget-title">
+      <i class="fab fa-github"></i> Pull Requests
+    </h2>
+    <div class="header-badges" *ngIf="connected && !loading">
+      <span class="badge badge--open" *ngIf="openCount > 0">{{ openCount }} open</span>
+      <span class="badge badge--draft" *ngIf="draftCount > 0">{{ draftCount }} draft</span>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="widget-toolbar" *ngIf="connected">
+    <div class="filter-tabs">
+      <button class="filter-tab" [class.active]="activeFilter === 'assigned'" (click)="setFilter('assigned')">
+        <i class="fas fa-user-tag"></i> Assigned to me
+      </button>
+      <button class="filter-tab" [class.active]="activeFilter === 'review-requested'" (click)="setFilter('review-requested')">
+        <i class="fas fa-eye"></i> Review requested
+      </button>
+      <button class="filter-tab" [class.active]="activeFilter === 'all'" (click)="setFilter('all')">
+        <i class="fas fa-code-branch"></i> All involving me
+      </button>
+    </div>
+    <button class="btn-refresh" (click)="refresh()" [disabled]="loading" title="Refresh">
+      <i class="fas fa-sync" [class.fa-spin]="loading"></i>
+    </button>
+    <button class="btn-debug" (click)="showDiagnostics = !showDiagnostics" title="Diagnostics">
+      <i class="fas fa-stethoscope"></i>
+    </button>
+  </div>
+
+  <!-- Diagnostics panel -->
+  <div class="diagnostics-panel" *ngIf="connected && showDiagnostics && diagnostic">
+    <div class="diag-row">
+      <span class="diag-key">Token login</span>
+      <code [class.diag-error]="diagnostic.resolvedUsername?.startsWith('ERROR')">{{ diagnostic.resolvedUsername || '(verifying…)' }}</code>
+      <button class="btn-verify" (click)="verifyToken()"><i class="fas fa-rotate"></i> Re-verify</button>
+    </div>
+    <div class="diag-row"><span class="diag-key">Last query</span><code>{{ diagnostic.lastQuery || '(none)' }}</code></div>
+    <div class="diag-row"><span class="diag-key">total_count</span><code>{{ diagnostic.totalCount !== null ? diagnostic.totalCount : '(not run)' }}</code></div>
+    <div class="diag-row" *ngIf="diagnostic.httpStatus !== null">
+      <span class="diag-key">HTTP status</span>
+      <code [class.diag-error]="diagnostic.httpStatus !== 200">{{ diagnostic.httpStatus }}</code>
+    </div>
+    <div class="diag-row" *ngIf="diagnostic.httpMessage">
+      <span class="diag-key">API message</span><code class="diag-error">{{ diagnostic.httpMessage }}</code>
+    </div>
+    <div class="diag-hint">
+      <i class="fas fa-info-circle"></i>
+      <strong>Token login</strong> is what GitHub says your token belongs to — it must match your GitHub username.
+      If <strong>total_count</strong> is 0, you have no open PRs matching the query on github.com.
+      401/403 = wrong token scope (<code>repo</code> or <code>pull_requests:read</code> required).
+    </div>
+  </div>
+
+  <!-- Not connected -->
+  <div class="empty-state" *ngIf="!connected">
+    <i class="fab fa-github empty-icon"></i>
+    <p>GitHub Pull Requests not connected.</p>
+    <span>Add your token in <strong>Connections</strong> to get started.</span>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading-state" *ngIf="connected && loading && prs.length === 0">
+    <i class="fas fa-spinner fa-spin"></i>
+    <p>Loading pull requests…</p>
+  </div>
+
+  <!-- Error -->
+  <div class="error-state" *ngIf="error && !loading">
+    <i class="fas fa-triangle-exclamation"></i>
+    <p>{{ error }}</p>
+    <button class="btn-retry" (click)="refresh()">
+      <i class="fas fa-redo"></i> Retry
+    </button>
+  </div>
+
+  <!-- Empty results -->
+  <div class="empty-state" *ngIf="connected && !loading && !error && prs.length === 0">
+    <i class="fas fa-check-circle empty-icon success"></i>
+    <p>No pull requests found.</p>
+    <span>Nothing matching the current filter.</span>
+  </div>
+
+  <!-- PR List -->
+  <div class="pr-list" *ngIf="connected && prs.length > 0">
+    <div
+      class="pr-card"
+      *ngFor="let pr of prs"
+      [class.pr-card--draft]="pr.draft"
+      [class.pr-card--expanded]="expandedPrId === pr.id"
+    >
+      <!-- PR summary row -->
+      <div class="pr-summary" (click)="toggleExpand(pr.id)">
+        <div class="pr-state-icon">
+          <i class="fas" [class.fa-code-pull-request]="!pr.draft" [class.fa-file-pen]="pr.draft"></i>
+        </div>
+
+        <div class="pr-main">
+          <div class="pr-title-row">
+            <span class="pr-title">{{ pr.title }}</span>
+            <span class="pr-draft-tag" *ngIf="pr.draft">Draft</span>
+          </div>
+          <div class="pr-meta">
+            <span class="pr-repo">
+              <i class="fas fa-folder-open"></i> {{ pr.repository.full_name || 'Unknown repo' }}
+            </span>
+            <span class="pr-number">#{{ pr.number }}</span>
+            <span class="pr-age">{{ prAge(pr.created_at) }}</span>
+            <span class="pr-author">
+              <i class="fas fa-user"></i> {{ pr.user.login }}
+            </span>
+          </div>
+          <div class="pr-labels" *ngIf="pr.labels && pr.labels.length > 0">
+            <span
+              class="pr-label"
+              *ngFor="let label of pr.labels"
+              [ngStyle]="labelStyle(label.color)"
+            >{{ label.name }}</span>
+          </div>
+        </div>
+
+        <div class="pr-stats">
+          <span class="stat" title="Comments" *ngIf="pr.comments > 0">
+            <i class="fas fa-comment"></i> {{ pr.comments }}
+          </span>
+          <span class="stat" title="Review comments" *ngIf="pr.review_comments > 0">
+            <i class="fas fa-comment-code"></i> {{ pr.review_comments }}
+          </span>
+          <i class="fas fa-chevron-down expand-icon" [class.rotated]="expandedPrId === pr.id"></i>
+        </div>
+      </div>
+
+      <!-- Expanded detail -->
+      <div class="pr-detail" *ngIf="expandedPrId === pr.id">
+        <div class="detail-grid">
+
+          <div class="detail-section" *ngIf="pr.assignees && pr.assignees.length > 0">
+            <span class="detail-label"><i class="fas fa-user-tag"></i> Assignees</span>
+            <div class="avatar-row">
+              <span class="avatar-chip" *ngFor="let a of pr.assignees">
+                <img [src]="a.avatar_url" [alt]="a.login" class="avatar">
+                {{ a.login }}
+              </span>
+            </div>
+          </div>
+
+          <div class="detail-section" *ngIf="pr.requested_reviewers && pr.requested_reviewers.length > 0">
+            <span class="detail-label"><i class="fas fa-eye"></i> Reviewers</span>
+            <div class="avatar-row">
+              <span class="avatar-chip" *ngFor="let r of pr.requested_reviewers">
+                <img [src]="r.avatar_url" [alt]="r.login" class="avatar">
+                {{ r.login }}
+              </span>
+            </div>
+          </div>
+
+          <div class="detail-section" *ngIf="pr.updated_at">
+            <span class="detail-label"><i class="fas fa-clock"></i> Last updated</span>
+            <span class="detail-value">{{ pr.updated_at | date:'MMM d, y, h:mm a' }}</span>
+          </div>
+
+          <div class="detail-section" *ngIf="pr.body">
+            <span class="detail-label"><i class="fas fa-align-left"></i> Description</span>
+            <p class="detail-body">{{ pr.body }}</p>
+          </div>
+
+        </div>
+
+        <a class="btn-view-pr" [href]="pr.html_url" target="_blank" rel="noopener noreferrer">
+          <i class="fab fa-github"></i> View on GitHub
+        </a>
+      </div>
+
+    </div>
+  </div>
+
+</div>

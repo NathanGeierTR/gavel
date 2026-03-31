@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { GitHubAIService } from '../../services/github-ai.service';
+import { GitHubPrService } from '../../services/github-pr.service';
 import { MicrosoftCalendarService } from '../../services/microsoft-calendar.service';
 import { MicrosoftTeamsService } from '../../services/microsoft-teams.service';
 
@@ -31,12 +32,19 @@ export class ConnectionsComponent implements OnInit {
   teamsConnected = false;
   teamsSaved = false;
 
+  // GitHub Pull Requests
+  githubPrToken = '';
+  githubPrUsername = '';
+  githubPrConnected = false;
+  githubPrSaved = false;
+
   // Azure DevOps (status-only — full config lives in the ADO widget)
   adoConnected = false;
   adoProjects: { organization: string; project: string }[] = [];
 
   constructor(
     private aiService: GitHubAIService,
+    private githubPrService: GitHubPrService,
     private calendarService: MicrosoftCalendarService,
     private teamsService: MicrosoftTeamsService
   ) {}
@@ -60,6 +68,11 @@ export class ConnectionsComponent implements OnInit {
     // Microsoft Teams
     this.teamsToken = localStorage.getItem('ms-teams-token') || '';
     this.teamsConnected = !!this.teamsToken;
+
+    // GitHub Pull Requests
+    this.githubPrToken = localStorage.getItem('github-pr-token') || '';
+    this.githubPrUsername = localStorage.getItem('github-pr-username') || '';
+    this.githubPrConnected = this.githubPrService.isConfigured();
 
     // Azure DevOps
     try {
@@ -126,5 +139,26 @@ export class ConnectionsComponent implements OnInit {
     this.teamsService.clearAccessToken();
     this.teamsToken = '';
     this.teamsConnected = false;
+  }
+
+  // GitHub Pull Requests
+  saveGitHubPr(): void {
+    const token = this.githubPrToken.trim();
+    if (!token) return;
+    this.githubPrService.initialize(token, this.githubPrUsername.trim());
+    this.githubPrConnected = true;
+    this.githubPrSaved = true;
+    // Reflect auto-resolved username back into the field once the API call returns
+    setTimeout(() => {
+      this.githubPrUsername = this.githubPrService.getUsername();
+      this.githubPrSaved = false;
+    }, 3000);
+  }
+
+  disconnectGitHubPr(): void {
+    this.githubPrService.clearConfiguration();
+    this.githubPrToken = '';
+    this.githubPrUsername = '';
+    this.githubPrConnected = false;
   }
 }

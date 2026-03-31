@@ -280,18 +280,20 @@ export class AdoWorkItemsComponent implements OnInit, OnDestroy {
       
       return true;
     }).sort((a, b) => {
-      // Sort by status priority: In Progress > In Development > Active > Ready to Accept > Committed > New
+      // Sort by status priority: Review > In Progress > In Development > Active > Ready to Accept > Ready to Test > Committed > Sprint Ready > New
       const stateA = a.fields['System.State']?.toLowerCase() || '';
       const stateB = b.fields['System.State']?.toLowerCase() || '';
       
       const statePriority: { [key: string]: number } = {
-        'in progress': 1,
-        'in development': 2,
-        'active': 3,
-        'ready to accept': 4,
-        'ready to test': 5,
-        'committed': 6,
-        'new': 7
+        'review': 1,
+        'in progress': 2,
+        'in development': 3,
+        'active': 4,
+        'ready to accept': 5,
+        'ready to test': 6,
+        'committed': 7,
+        'sprint ready': 8,
+        'new': 9
       };
       
       const priorityA = statePriority[stateA] || 999;
