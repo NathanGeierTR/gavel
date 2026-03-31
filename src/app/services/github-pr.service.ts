@@ -66,6 +66,7 @@ export interface DiagnosticInfo {
 
 const STORAGE_KEY = 'github-pr-token';
 const STORAGE_USERNAME_KEY = 'github-pr-username';
+const STORAGE_ORG_KEY = 'github-pr-org';
 
 @Injectable({
   providedIn: 'root'
@@ -75,6 +76,7 @@ export class GitHubPrService {
 
   private token = '';
   private username = '';
+  private org = '';
 
   private prsSubject = new BehaviorSubject<GitHubPullRequest[]>([]);
   public prs$ = this.prsSubject.asObservable();
@@ -93,31 +95,43 @@ export class GitHubPrService {
   });
   public diagnostic$ = this.diagnosticSubject.asObservable();
 
+  // Emits the GitHub login name once the token is verified — null while unverified
+  private verifiedUsernameSubject = new BehaviorSubject<string | null>(null);
+  public verifiedUsername$ = this.verifiedUsernameSubject.asObservable();
+
   constructor(private http: HttpClient) {
     this.loadConfiguration();
   }
 
   // ── Configuration ────────────────────────────────────────────
 
-  initialize(token: string, username: string): void {
+  initialize(token: string): void {
     this.token = token.trim();
-    this.username = username.trim();
+    this.username = '';
+    this.verifiedUsernameSubject.next(null);
     this.saveConfiguration();
     this.connectedSubject.next(true);
 
-    // Auto-resolve username from the API if not provided
-    if (!this.username) {
-      this.fetchAuthenticatedUser().subscribe({
-        next: user => {
-          this.username = user.login;
-          localStorage.setItem(STORAGE_USERNAME_KEY, this.username);
-          this.diagnosticSubject.next({ ...this.diagnosticSubject.value, resolvedUsername: user.login });
-        },
-        error: () => { /* non-fatal — queries will fall back to @me */ }
-      });
-    } else {
-      this.diagnosticSubject.next({ ...this.diagnosticSubject.value, resolvedUsername: this.username });
-    }
+    // Always verify the token against the API — never trust a manually typed username
+    this.diagnosticSubject.next({ ...this.diagnosticSubject.value, resolvedUsername: '(verifying…)' });
+    this.fetchAuthenticatedUser().subscribe({
+      next: user => {
+        this.username = user.login;
+        localStorage.setItem(STORAGE_USERNAME_KEY, this.username);
+        this.verifiedUsernameSubject.next(user.login);
+        this.diagnosticSubject.next({ ...this.diagnosticSubject.value, resolvedUsername: user.login });
+      },
+      error: (err: HttpErrorResponse) => {
+        const status = err?.status ?? null;
+        const msg = err?.error?.message ?? null;
+        this.diagnosticSubject.next({
+          ...this.diagnosticSubject.value,
+          resolvedUsername: `ERROR ${status ?? '?'}${msg ? ': ' + msg : ''}`,
+          httpStatus: status,
+          httpMessage: msg
+        });
+      }
+    });
   }
 
   clearConfiguration(): void {
@@ -126,6 +140,7 @@ export class GitHubPrService {
     localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem(STORAGE_USERNAME_KEY);
     this.connectedSubject.next(false);
+    this.verifiedUsernameSubject.next(null);
     this.prsSubject.next([]);
     this.errorSubject.next(null);
   }
@@ -138,15 +153,24 @@ export class GitHubPrService {
     return this.username;
   }
 
+  getOrg(): string {
+    return this.org;
+  }
+
+  setOrg(org: string): void {
+    this.org = org.trim();
+    localStorage.setItem(STORAGE_ORG_KEY, this.org);
+  }
+
   /** Re-run the /user call and update diagnostics — useful for manual troubleshooting. */
   verifyToken(): void {
     this.diagnosticSubject.next({ ...this.diagnosticSubject.value, resolvedUsername: '(verifying…)' });
+    this.verifiedUsernameSubject.next(null);
     this.fetchAuthenticatedUser().subscribe({
       next: user => {
-        if (user.login !== this.username) {
-          this.username = user.login;
-          localStorage.setItem(STORAGE_USERNAME_KEY, this.username);
-        }
+        this.username = user.login;
+        localStorage.setItem(STORAGE_USERNAME_KEY, this.username);
+        this.verifiedUsernameSubject.next(user.login);
         this.diagnosticSubject.next({ ...this.diagnosticSubject.value, resolvedUsername: user.login, httpStatus: 200, httpMessage: null });
       },
       error: (err: HttpErrorResponse) => {
@@ -170,19 +194,20 @@ export class GitHubPrService {
   private loadConfiguration(): void {
     this.token = localStorage.getItem(STORAGE_KEY) || '';
     this.username = localStorage.getItem(STORAGE_USERNAME_KEY) || '';
+    this.org = localStorage.getItem(STORAGE_ORG_KEY) || '';
     this.connectedSubject.next(!!this.token);
 
     if (this.token) {
-      // Immediately populate diagnostics with whatever is stored
+      // Immediately populate diagnostics with whatever is stored, then re-verify
+      this.verifiedUsernameSubject.next(this.username || null);
       this.diagnosticSubject.next({ ...this.diagnosticSubject.value, resolvedUsername: this.username || '(verifying…)' });
 
       // Verify actual identity from the token — corrects a wrong/missing stored username
       this.fetchAuthenticatedUser().subscribe({
         next: user => {
-          if (user.login !== this.username) {
-            this.username = user.login;
-            localStorage.setItem(STORAGE_USERNAME_KEY, this.username);
-          }
+          this.username = user.login;
+          localStorage.setItem(STORAGE_USERNAME_KEY, this.username);
+          this.verifiedUsernameSubject.next(user.login);
           this.diagnosticSubject.next({ ...this.diagnosticSubject.value, resolvedUsername: user.login });
         },
         error: (err: HttpErrorResponse) => {
@@ -237,13 +262,14 @@ export class GitHubPrService {
 
     let query: string;
     const actor = this.username || '@me';
+    const orgClause = this.org ? ` org:${this.org}` : '';
 
     if (filter === 'all') {
-      query = `is:pr is:open involves:${actor} archived:false`;
+      query = `is:pr is:open involves:${actor}${orgClause} archived:false`;
     } else if (filter === 'review-requested') {
-      query = `is:pr is:open review-requested:${actor} archived:false`;
+      query = `is:pr is:open review-requested:${actor}${orgClause} archived:false`;
     } else {
-      query = `is:pr is:open assignee:${actor} archived:false`;
+      query = `is:pr is:open assignee:${actor}${orgClause} archived:false`;
     }
 
     const url = `${this.apiBase}/search/issues?q=${encodeURIComponent(query)}&per_page=50&sort=updated&order=desc`;

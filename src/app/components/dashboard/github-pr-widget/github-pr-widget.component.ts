@@ -23,6 +23,9 @@ export class GithubPrWidgetComponent implements OnInit, OnDestroy {
   diagnostic: DiagnosticInfo | null = null;
   showDiagnostics = false;
 
+  orgInput = '';
+  activeOrg = '';
+
   private destroy$ = new Subject<void>();
 
   constructor(private prService: GitHubPrService) {}
@@ -41,6 +44,10 @@ export class GithubPrWidgetComponent implements OnInit, OnDestroy {
     this.prService.loading$.pipe(takeUntil(this.destroy$)).subscribe(l => (this.loading = l));
     this.prService.error$.pipe(takeUntil(this.destroy$)).subscribe(e => (this.error = e));
     this.prService.diagnostic$.pipe(takeUntil(this.destroy$)).subscribe(d => (this.diagnostic = d));
+
+    // Restore saved org
+    this.activeOrg = this.prService.getOrg();
+    this.orgInput = this.activeOrg;
   }
 
   ngOnDestroy(): void {
@@ -58,6 +65,19 @@ export class GithubPrWidgetComponent implements OnInit, OnDestroy {
 
   setFilter(filter: PrFilter): void {
     this.activeFilter = filter;
+    this.refresh();
+  }
+
+  applyOrg(): void {
+    this.activeOrg = this.orgInput.trim();
+    this.prService.setOrg(this.activeOrg);
+    this.refresh();
+  }
+
+  clearOrg(): void {
+    this.orgInput = '';
+    this.activeOrg = '';
+    this.prService.setOrg('');
     this.refresh();
   }
 

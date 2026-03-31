@@ -1,6 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { GitHubAIService } from '../../services/github-ai.service';
 import { GitHubPrService } from '../../services/github-pr.service';
 import { MicrosoftCalendarService } from '../../services/microsoft-calendar.service';
@@ -13,7 +15,7 @@ import { MicrosoftTeamsService } from '../../services/microsoft-teams.service';
   templateUrl: './connections.component.html',
   styleUrl: './connections.component.scss'
 })
-export class ConnectionsComponent implements OnInit {
+export class ConnectionsComponent implements OnInit, OnDestroy {
   // GitHub AI
   githubToken = '';
   githubModel = 'gpt-4o';
@@ -34,9 +36,11 @@ export class ConnectionsComponent implements OnInit {
 
   // GitHub Pull Requests
   githubPrToken = '';
-  githubPrUsername = '';
+  githubPrVerifiedUsername: string | null = null;
   githubPrConnected = false;
   githubPrSaved = false;
+
+  private destroy$ = new Subject<void>();
 
   // Azure DevOps (status-only — full config lives in the ADO widget)
   adoConnected = false;
@@ -51,6 +55,11 @@ export class ConnectionsComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadStatuses();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   private loadStatuses(): void {
@@ -71,8 +80,10 @@ export class ConnectionsComponent implements OnInit {
 
     // GitHub Pull Requests
     this.githubPrToken = localStorage.getItem('github-pr-token') || '';
-    this.githubPrUsername = localStorage.getItem('github-pr-username') || '';
     this.githubPrConnected = this.githubPrService.isConfigured();
+    this.githubPrService.verifiedUsername$.pipe(takeUntil(this.destroy$)).subscribe(u => {
+      this.githubPrVerifiedUsername = u;
+    });
 
     // Azure DevOps
     try {
@@ -145,20 +156,16 @@ export class ConnectionsComponent implements OnInit {
   saveGitHubPr(): void {
     const token = this.githubPrToken.trim();
     if (!token) return;
-    this.githubPrService.initialize(token, this.githubPrUsername.trim());
+    this.githubPrService.initialize(token);
     this.githubPrConnected = true;
     this.githubPrSaved = true;
-    // Reflect auto-resolved username back into the field once the API call returns
-    setTimeout(() => {
-      this.githubPrUsername = this.githubPrService.getUsername();
-      this.githubPrSaved = false;
-    }, 3000);
+    setTimeout(() => (this.githubPrSaved = false), 3000);
   }
 
   disconnectGitHubPr(): void {
     this.githubPrService.clearConfiguration();
     this.githubPrToken = '';
-    this.githubPrUsername = '';
+    this.githubPrVerifiedUsername = null;
     this.githubPrConnected = false;
   }
 }

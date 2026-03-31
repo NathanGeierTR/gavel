@@ -92,17 +92,20 @@
           <span class="scope-note">Required scope: <code>repo</code> (Classic PAT) or <code>pull_requests:read</code> (Fine-grained)</span>
         </div>
 
-        <div class="form-row">
-          <div class="form-group">
-            <label for="github-pr-token">Personal Access Token</label>
-            <input id="github-pr-token" type="password" [(ngModel)]="githubPrToken"
-                   placeholder="ghp_xxxxxxxxxxxx" class="token-input" autocomplete="off">
-          </div>
-          <div class="form-group form-group--narrow">
-            <label for="github-pr-username">GitHub Username <span class="optional">(optional)</span></label>
-            <input id="github-pr-username" type="text" [(ngModel)]="githubPrUsername"
-                   placeholder="your-username" class="token-input" autocomplete="off">
-          </div>
+        <div class="form-group">
+          <label for="github-pr-token">Personal Access Token</label>
+          <input id="github-pr-token" type="password" [(ngModel)]="githubPrToken"
+                 placeholder="ghp_xxxxxxxxxxxx" class="token-input" autocomplete="off">
+        </div>
+
+        <div class="verified-identity" *ngIf="githubPrConnected">
+          <ng-container *ngIf="githubPrVerifiedUsername; else verifying">
+            <i class="fas fa-circle-check verified-icon"></i>
+            Token belongs to <strong>{{ githubPrVerifiedUsername }}</strong>
+          </ng-container>
+          <ng-template #verifying>
+            <i class="fas fa-spinner fa-spin"></i> Verifying token identity…
+          </ng-template>
         </div>
       </div>
 

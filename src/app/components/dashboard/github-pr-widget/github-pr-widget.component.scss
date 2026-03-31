@@ -181,6 +181,75 @@
     &:hover { background: #45475a; }
   }
 
+  // ── Org filter row ────────────────────────────────────────────
+  .org-filter-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .org-icon {
+    font-size: 0.8rem;
+    color: var(--saf-color-text-secondary, #6b7280);
+    flex-shrink: 0;
+  }
+
+  .org-input {
+    flex: 1;
+    min-width: 140px;
+    padding: 4px 8px;
+    font-size: 0.8rem;
+    border: 1px solid var(--saf-color-line-subtle, #e5e7eb);
+    border-radius: 6px;
+    background: var(--saf-color-background-subtle, #fff);
+    color: var(--saf-color-text-primary, #111827);
+    outline: none;
+
+    &:focus { border-color: var(--saf-color-brand-racing-green-600, #166534); }
+  }
+
+  .btn-apply-org {
+    padding: 4px 10px;
+    font-size: 0.8rem;
+    border: 1px solid var(--saf-color-brand-racing-green-600, #166534);
+    border-radius: 6px;
+    background: var(--saf-color-brand-racing-green-600, #166534);
+    color: #fff;
+    cursor: pointer;
+    transition: background 0.15s ease;
+    flex-shrink: 0;
+
+    &:hover:not(:disabled) { background: var(--saf-color-brand-racing-green-700, #14532d); }
+    &:disabled { opacity: 0.4; cursor: not-allowed; }
+  }
+
+  .btn-clear-org {
+    padding: 4px 8px;
+    font-size: 0.8rem;
+    border: 1px solid var(--saf-color-line-subtle, #e5e7eb);
+    border-radius: 6px;
+    background: transparent;
+    cursor: pointer;
+    color: var(--saf-color-text-secondary, #6b7280);
+    flex-shrink: 0;
+
+    &:hover { background: var(--saf-color-background-muted, #f3f4f6); }
+  }
+
+  .active-org-badge {
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: var(--saf-color-brand-racing-green-600, #166534);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+
   // ── States ───────────────────────────────────────────────────
   .empty-state,
   .loading-state,

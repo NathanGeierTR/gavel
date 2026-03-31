@@ -32,6 +32,26 @@
     </button>
   </div>
 
+  <!-- Org filter row -->
+  <div class="org-filter-row" *ngIf="connected">
+    <i class="fas fa-building org-icon"></i>
+    <input
+      class="org-input"
+      type="text"
+      [(ngModel)]="orgInput"
+      placeholder="Filter by org (e.g. tr-labs)"
+      (keydown.enter)="applyOrg()"
+      autocomplete="off"
+    />
+    <button class="btn-apply-org" (click)="applyOrg()" [disabled]="orgInput.trim() === activeOrg">Apply</button>
+    <button class="btn-clear-org" (click)="clearOrg()" *ngIf="activeOrg" title="Clear org filter">
+      <i class="fas fa-xmark"></i>
+    </button>
+    <span class="active-org-badge" *ngIf="activeOrg">
+      <i class="fas fa-filter"></i> {{ activeOrg }}
+    </span>
+  </div>
+
   <!-- Diagnostics panel -->
   <div class="diagnostics-panel" *ngIf="connected && showDiagnostics && diagnostic">
     <div class="diag-row">
