@@ -57,6 +57,9 @@ export class MicrosoftCalendarService {
   private errorSubject = new BehaviorSubject<string | null>(null);
   public error$ = this.errorSubject.asObservable();
 
+  private configuredSubject = new BehaviorSubject<boolean>(false);
+  public isConfigured$ = this.configuredSubject.asObservable();
+
   constructor(private http: HttpClient) {
     this.loadConfiguration();
   }
@@ -66,6 +69,7 @@ export class MicrosoftCalendarService {
    */
   initialize(accessToken: string) {
     this.accessToken = accessToken;
+    this.configuredSubject.next(true);
     this.saveConfiguration();
   }
 
@@ -116,7 +120,12 @@ export class MicrosoftCalendarService {
       }),
       catchError(error => {
         console.error('Failed to fetch calendar events:', error);
-        this.errorSubject.next(`Failed to load calendar: ${error.message || 'Unknown error'}`);
+        if (error.status === 401) {
+          this.clearConfiguration();
+          this.errorSubject.next('Outlook Calendar token expired or invalid. Please reconnect.');
+        } else {
+          this.errorSubject.next(`Failed to load calendar: ${error.message || 'Unknown error'}`);
+        }
         this.loadingSubject.next(false);
         return of([]);
       })
@@ -127,7 +136,7 @@ export class MicrosoftCalendarService {
    * Check if service is configured
    */
   isConfigured(): boolean {
-    return !!this.accessToken;
+    return this.configuredSubject.value;
   }
 
   /**
@@ -146,6 +155,7 @@ export class MicrosoftCalendarService {
     const token = localStorage.getItem('outlook-calendar-token');
     if (token) {
       this.accessToken = token;
+      this.configuredSubject.next(true);
     }
   }
 
@@ -154,6 +164,7 @@ export class MicrosoftCalendarService {
    */
   clearConfiguration() {
     this.accessToken = '';
+    this.configuredSubject.next(false);
     localStorage.removeItem('outlook-calendar-token');
     this.eventsSubject.next([]);
   }

@@ -5,16 +5,18 @@ import { DashboardComponent } from './components/dashboard/dashboard.component';
 import { LoginComponent } from './components/login/login.component';
 import { ConnectionsComponent } from './components/connections/connections.component';
 import { JournalComponent } from './components/journal/journal.component';
+import { GoalsComponent } from './components/goals/goals.component';
 import { OpenArenaChatComponent } from './components/dashboard/open-arena-chat/open-arena-chat.component';
 import { GitHubAIService, RateLimitInfo } from './services/github-ai.service';
 import { AuthService } from './services/auth.service';
+import { NavigationService } from './services/navigation.service';
 import { Subscription } from 'rxjs';
 import { User } from '@angular/fire/auth';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, DashboardComponent, LoginComponent, ConnectionsComponent, JournalComponent, OpenArenaChatComponent, CommonModule],
+  imports: [RouterOutlet, DashboardComponent, LoginComponent, ConnectionsComponent, JournalComponent, GoalsComponent, OpenArenaChatComponent, CommonModule],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
@@ -25,7 +27,7 @@ export class AppComponent implements OnInit, OnDestroy {
   showSetupPrompt = false;
   currentUser: User | null = null;
   authLoaded = false;
-  currentView: 'dashboard' | 'connections' | 'journal' | 'open-arena-chat' = 'dashboard';
+  currentView: 'dashboard' | 'connections' | 'journal' | 'goals' | 'open-arena-chat' = 'dashboard';
   touchTooltipLabel: string | null = null;
   touchTooltipX = 0;
   touchTooltipY = 0;
@@ -33,7 +35,7 @@ export class AppComponent implements OnInit, OnDestroy {
   private longPressTimer: ReturnType<typeof setTimeout> | null = null;
   private subscriptions = new Subscription();
 
-  constructor(public githubAIService: GitHubAIService, private authService: AuthService) {}
+  constructor(public githubAIService: GitHubAIService, private authService: AuthService, private navigationService: NavigationService) {}
 
   ngOnInit() {
     // Track auth state
@@ -42,6 +44,11 @@ export class AppComponent implements OnInit, OnDestroy {
         this.currentUser = user;
         this.authLoaded = true;
       })
+    );
+
+    // Handle navigation requests from child components
+    this.subscriptions.add(
+      this.navigationService.navigate$.subscribe(view => this.navigateTo(view))
     );
 
     // Subscribe to AI service configuration status
@@ -101,7 +108,7 @@ export class AppComponent implements OnInit, OnDestroy {
     this.authService.logout().subscribe();
   }
 
-  navigateTo(view: 'dashboard' | 'connections' | 'journal' | 'open-arena-chat') {
+  navigateTo(view: 'dashboard' | 'connections' | 'journal' | 'goals' | 'open-arena-chat') {
     this.currentView = view;
     this.showSetupPrompt = false;
   }

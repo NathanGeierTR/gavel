@@ -1,0 +1,327 @@
+.goals-page {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.goals-header {
+  h2 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #314b3e;
+    margin: 0 0 4px;
+
+    i {
+      margin-right: 10px;
+      opacity: 0.8;
+    }
+  }
+
+  .subtitle {
+    margin: 0;
+    font-size: 0.85rem;
+    color: #777;
+  }
+}
+
+// ─── New goal card ────────────────────────────────────────────────────────────
+
+.new-goal-card {
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid rgba(49, 75, 62, 0.15);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #314b3e;
+  }
+}
+
+.form-row {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.input-title {
+  flex: 1;
+  padding: 10px 12px;
+  border: 1px solid rgba(49, 75, 62, 0.2);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  color: #1a1a1a;
+  background: rgba(49, 75, 62, 0.03);
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+
+  &:focus {
+    outline: none;
+    border-color: #314b3e;
+    background: #fff;
+  }
+
+  &::placeholder { color: #bbb; font-style: italic; }
+  &:disabled { opacity: 0.6; }
+}
+
+.select-year {
+  padding: 10px 8px;
+  border: 1px solid rgba(49, 75, 62, 0.2);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-family: inherit;
+  color: #314b3e;
+  background: rgba(49, 75, 62, 0.03);
+  cursor: pointer;
+  transition: border-color 0.2s;
+
+  &:focus { outline: none; border-color: #314b3e; }
+  &:disabled { opacity: 0.6; }
+}
+
+.entry-textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid rgba(49, 75, 62, 0.2);
+  border-radius: 8px;
+  background: rgba(49, 75, 62, 0.03);
+  color: #1a1a1a;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  resize: vertical;
+  font-family: inherit;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+
+  &:focus {
+    outline: none;
+    border-color: #314b3e;
+    background: #fff;
+  }
+
+  &::placeholder { color: #bbb; font-style: italic; }
+  &:disabled { opacity: 0.6; }
+}
+
+.btn-submit {
+  align-self: flex-end;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: #314b3e;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, opacity 0.2s;
+
+  &:hover:not(:disabled) { background: #3d5e4f; }
+  &:disabled { opacity: 0.4; cursor: not-allowed; }
+}
+
+// ─── Year tabs ────────────────────────────────────────────────────────────────
+
+.year-tabs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.year-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 14px;
+  border: 1px solid rgba(49, 75, 62, 0.2);
+  border-radius: 20px;
+  background: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #555;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+
+  &:hover { background: rgba(49, 75, 62, 0.06); color: #314b3e; }
+
+  &.active {
+    background: #314b3e;
+    border-color: #314b3e;
+    color: #fff;
+
+    .year-count { background: rgba(255,255,255,0.25); color: #fff; }
+  }
+}
+
+.year-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  background: rgba(49, 75, 62, 0.1);
+  border-radius: 9px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #314b3e;
+}
+
+// ─── Goal cards ───────────────────────────────────────────────────────────────
+
+.goals-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  counter-reset: goal-counter;
+}
+
+.goal-card {
+  background: #fff;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.07);
+  padding: 14px 18px;
+  transition: box-shadow 0.2s;
+
+  &:hover { box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); }
+}
+
+.goal-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.goal-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(49, 75, 62, 0.1);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #314b3e;
+  flex-shrink: 0;
+}
+
+.goal-title {
+  flex: 1;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.goal-description {
+  margin: 0;
+  font-size: 0.88rem;
+  color: #555;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.btn-edit {
+  background: none;
+  border: none;
+  color: #ccc;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  transition: color 0.2s, background 0.2s;
+
+  &:hover { color: #314b3e; background: rgba(49, 75, 62, 0.08); }
+}
+
+.btn-delete {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: #ccc;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  transition: color 0.2s, background 0.2s;
+
+  &:hover:not(:disabled) { color: #e53e3e; background: rgba(229, 62, 62, 0.08); }
+  &:disabled { opacity: 0.4; cursor: not-allowed; }
+}
+
+// ─── Edit form ────────────────────────────────────────────────────────────────
+
+.edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.edit-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-save-edit {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 16px;
+  background: #314b3e;
+  color: #fff;
+  border: none;
+  border-radius: 7px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.2s, opacity 0.2s;
+
+  &:hover:not(:disabled) { background: #3d5e4f; }
+  &:disabled { opacity: 0.4; cursor: not-allowed; }
+}
+
+.btn-cancel-edit {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 16px;
+  background: none;
+  border: 1px solid rgba(0,0,0,0.15);
+  border-radius: 7px;
+  font-size: 0.85rem;
+  color: #555;
+  cursor: pointer;
+  transition: background 0.2s;
+
+  &:hover:not(:disabled) { background: rgba(0,0,0,0.04); }
+  &:disabled { opacity: 0.4; cursor: not-allowed; }
+}
+
+// ─── Empty state ──────────────────────────────────────────────────────────────
+
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: #bbb;
+
+  i {
+    font-size: 2.5rem;
+    display: block;
+    margin-bottom: 12px;
+    opacity: 0.4;
+  }
+
+  p { margin: 0; font-size: 0.9rem; }
+}

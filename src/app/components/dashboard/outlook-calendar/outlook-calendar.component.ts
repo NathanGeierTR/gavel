@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MicrosoftCalendarService, CalendarEvent } from '../../../services/microsoft-calendar.service';
+import { NavigationService } from '../../../services/navigation.service';
 import { Subject, takeUntil, interval } from 'rxjs';
 
 @Component({
@@ -25,12 +26,14 @@ export class OutlookCalendarComponent implements OnInit, OnDestroy {
 
   private destroy$ = new Subject<void>();
 
-  constructor(private calendarService: MicrosoftCalendarService) {}
+  constructor(private calendarService: MicrosoftCalendarService, private navigationService: NavigationService) {}
 
   ngOnInit() {
-    this.isConfigured = this.calendarService.isConfigured();
-
     // Subscribe to service observables
+    this.calendarService.isConfigured$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(configured => this.isConfigured = configured);
+
     this.calendarService.events$
       .pipe(takeUntil(this.destroy$))
       .subscribe(events => this.events = events);
@@ -44,7 +47,7 @@ export class OutlookCalendarComponent implements OnInit, OnDestroy {
       .subscribe(error => this.error = error);
 
     // Load events if configured
-    if (this.isConfigured) {
+    if (this.calendarService.isConfigured()) {
       this.loadEvents();
 
       // Refresh events every 5 minutes
@@ -82,6 +85,10 @@ export class OutlookCalendarComponent implements OnInit, OnDestroy {
     this.accessToken = '';
     this.isConfigured = false;
     this.events = [];
+  }
+
+  goToConnections() {
+    this.navigationService.navigateTo('connections');
   }
 
   formatTime(dateTimeString: string, timeZone?: string): string {

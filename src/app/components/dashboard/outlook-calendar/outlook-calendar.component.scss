@@ -1,9 +1,70 @@
+// Dashboard Variables
+$dashboard-gap: 1.5rem;
+$dashboard-gap-mobile: 4px;
+$widget-radius: 12px;
+$widget-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+$border-color: #e5e7eb;
+
 // ─── Outlook Timeline — Horizontal Strip ──────────────────────────────────────
+
+:host {
+  flex: 1 1 auto;
+}
 
 .outlook-timeline {
   display: flex;
   flex-direction: column;
   width: 100%;
+  background: var(--saf-color-background-default);
+  border-radius: $widget-radius;
+  border: 1px solid $border-color;
+  box-shadow: $widget-shadow;
+  margin-bottom: 12px;
+  overflow: visible; // popovers drop below the bar
+
+  &.is-minimized {
+    height: 30px;
+  }
+
+  @media (max-width: 768px) {
+    margin-bottom: $dashboard-gap-mobile;
+    border-radius: 6px;
+  }
+}
+
+// ─── Disconnected State ───────────────────────────────────────────────────────
+
+.disconnected-bar {
+  display: flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 4px;
+}
+
+.disconnected-btn {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: white;
+  border: 1px solid var(--saf-color-line-subtle);
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--saf-color-text-subtle);
+  margin-bottom: 8px;
+  transition: background 0.15s, color 0.15s, border-color 0.15s, opacity 0.15s;
+
+  i {
+    font-size: 0.875rem;
+  }
+
+  &:hover {
+    background-color: var(--saf-color-background-subtle);
+    border-color: var(--saf-color-brand-sky-400);
+    color: var(--saf-color-brand-sky-500);
+    opacity: 1;
+  }
 }
 
 // ─── Minimized Strip ──────────────────────────────────────────────────────────
@@ -32,10 +93,6 @@
   }
 
   .playhead {
-    .playhead-head {
-      top: 0;
-    }
-
     .playhead-line {
       top: 4px;
     }
@@ -152,6 +209,17 @@
 .today-btn {
   font-weight: 600;
   color: var(--saf-color-brand-sky-500);
+}
+
+.collapse-btn {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  justify-content: center;
+
+  i {
+    font-size: 0.75rem;
+  }
 }
 
 .configure-btn {
@@ -416,27 +484,14 @@
   z-index: 10;
   pointer-events: none;
 
-  .playhead-head {
-    position: absolute;
-    top: 2px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 8px;
-    height: 8px;
-    background: var(--saf-color-red-500);
-    border-radius: 50%;
-    box-shadow: 0 0 6px rgba(239, 68, 68, 0.55);
-    animation: pulse-head 2s ease-in-out infinite;
-  }
-
   .playhead-line {
     position: absolute;
     top: 6px;
     bottom: 0;
     left: 50%;
     transform: translateX(-50%);
-    width: 1.5px;
-    background: var(--saf-color-red-500);
+    width: 3px;
+    background: var(--saf-color-red-400);
     opacity: 0.75;
   }
 }

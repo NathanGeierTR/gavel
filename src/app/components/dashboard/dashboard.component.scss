@@ -26,19 +26,16 @@ $text-secondary: #6b7280;
   }
 
   // Full-width horizontal calendar timeline bar
-  .calendar-timeline-bar {
-    background: var(--saf-color-background-default);
-    border-radius: $widget-radius;
-    border: 1px solid $border-color;
-    box-shadow: $widget-shadow;
-    margin-bottom: $dashboard-gap;
-    overflow: visible; // popovers drop below the bar
 
-    @media (max-width: 768px) {
-      margin-bottom: $dashboard-gap-mobile;
-      border-radius: 6px;
+.calendar-timeline-bar {
+    display: flex;
+    gap: 0 8px;
+
+    @media (max-width: 1024px) {
+      flex-direction: column;
     }
   }
+
 
   .dashboard-grid {
     display: grid;

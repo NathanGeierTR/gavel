@@ -1,7 +1,17 @@
-<div class="outlook-timeline" [class.is-minimized]="isMinimized">
+<button 
+  *ngIf="!isConfigured"
+  type="button"
+  class="disconnected-btn"
+  (click)="goToConnections()"
+  title="Outlook Calendar not connected — click to connect"
+  aria-label="Outlook Calendar not connected, click to go to connections page">
+  <i class="fas fa-calendar-times" aria-hidden="true"></i>
+</button>
+
+<div *ngIf="isConfigured" class="outlook-timeline" [class.is-minimized]="isMinimized">
 
   <!-- Minimized strip (click anywhere to expand) -->
-  <div class="minimized-strip" *ngIf="isMinimized" (click)="expand()" role="button" tabindex="0" aria-label="Expand calendar timeline" (keydown.enter)="expand()" (keydown.space)="expand()">
+  <div class="minimized-strip" *ngIf="isMinimized && isConfigured" (click)="expand()" role="button" tabindex="0" aria-label="Expand calendar timeline" (keydown.enter)="expand()" (keydown.space)="expand()">
 
     <!-- Watermark icon -->
     <i class="fas fa-calendar-day strip-watermark" aria-hidden="true"></i>
@@ -30,7 +40,6 @@
 
     <!-- Playhead -->
     <div class="playhead" [style.left.%]="getCurrentTimePosition()" *ngIf="isConfigured && isToday()">
-      <div class="playhead-head"></div>
       <div class="playhead-line"></div>
     </div>
 
@@ -43,7 +52,7 @@
   </div>
 
   <!-- Compact top bar -->
-  <div class="timeline-top-bar" *ngIf="!isMinimized" (click)="$event.stopPropagation()">
+  <div class="timeline-top-bar" *ngIf="!isMinimized && isConfigured" (click)="$event.stopPropagation()">
     <div class="timeline-nav">
       <i class="fas fa-calendar-day timeline-icon"></i>
       <button
@@ -78,22 +87,6 @@
       </span>
       <button
         type="button"
-        class="ctl-btn"
-        (click)="refresh()"
-        [disabled]="loading || !isConfigured"
-        title="Refresh">
-        <i class="fas fa-sync" [class.spinning]="loading"></i>
-      </button>
-      <button
-        type="button"
-        class="ctl-btn"
-        [class.active]="showConfig"
-        (click)="showConfig = !showConfig"
-        title="Settings">
-        <i class="fas fa-cog"></i>
-      </button>
-      <button
-        type="button"
         class="ctl-btn collapse-btn"
         (click)="minimize()"
         title="Minimize timeline"
@@ -104,7 +97,7 @@
   </div>
 
   <!-- Configuration Panel -->
-  <div class="config-panel" *ngIf="!isMinimized && showConfig" (click)="$event.stopPropagation()">
+  <div class="config-panel" *ngIf="!isMinimized && showConfig && isConfigured" (click)="$event.stopPropagation()">
     <h4>Outlook Calendar</h4>
     <div class="config-form">
       <div class="form-group">
@@ -133,7 +126,7 @@
   </div>
 
   <!-- Timeline strip -->
-  <div class="timeline-strip" *ngIf="!isMinimized && !showConfig" (click)="closePopup()">
+  <div class="timeline-strip" *ngIf="!isMinimized && !showConfig && isConfigured" (click)="closePopup()">
 
     <!-- Not configured overlay -->
     <div class="strip-unconfigured" *ngIf="!isConfigured">
@@ -224,7 +217,6 @@
 
     <!-- Playhead -->
     <div class="playhead" [style.left.%]="getCurrentTimePosition()" *ngIf="isConfigured && isToday()">
-      <div class="playhead-head"></div>
       <div class="playhead-line"></div>
     </div>
 

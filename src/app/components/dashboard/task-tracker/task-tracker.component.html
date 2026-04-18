@@ -36,11 +36,19 @@
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label for="taskPriority">Priority</label>
-          <select id="taskPriority" [(ngModel)]="newTask.priority" name="priority" class="form-input">
-            <option value="low">Low</option>
+          <label for="taskUrgency">Urgency</label>
+          <select id="taskUrgency" [(ngModel)]="newTask.urgency" name="urgency" class="form-input">
+            <option value="time-sensitive">⚡ Time-sensitive</option>
             <option value="medium">Medium</option>
+            <option value="low">Low</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="taskImportance">Importance</label>
+          <select id="taskImportance" [(ngModel)]="newTask.importance" name="importance" class="form-input">
             <option value="high">High</option>
+            <option value="medium">Medium</option>
+            <option value="low">Low</option>
           </select>
         </div>
         <div class="form-group">
@@ -51,6 +59,42 @@
             [(ngModel)]="newTask.dueDate"
             name="dueDate"
             class="form-input">
+        </div>
+      </div>
+      <div class="form-group recurring-toggle">
+        <label class="checkbox-label">
+          <input type="checkbox" [(ngModel)]="newTask.recurring" name="recurring">
+          <span>Recurring task</span>
+        </label>
+      </div>
+      <div *ngIf="newTask.recurring" class="form-row">
+        <div class="form-group">
+          <label for="taskRecurType">Repeats by</label>
+          <select id="taskRecurType" [(ngModel)]="newTask.recurringType" name="recurringType" class="form-input">
+            <option value="weekday">Day of week</option>
+            <option value="monthday">Day of month</option>
+            <option value="interval">Every N days</option>
+          </select>
+        </div>
+        <div class="form-group" *ngIf="newTask.recurringType === 'weekday'">
+          <label for="taskRecurWD">Day</label>
+          <select id="taskRecurWD" [(ngModel)]="newTask.recurringValue" name="recurringValue" class="form-input">
+            <option [ngValue]="0">Sunday</option>
+            <option [ngValue]="1">Monday</option>
+            <option [ngValue]="2">Tuesday</option>
+            <option [ngValue]="3">Wednesday</option>
+            <option [ngValue]="4">Thursday</option>
+            <option [ngValue]="5">Friday</option>
+            <option [ngValue]="6">Saturday</option>
+          </select>
+        </div>
+        <div class="form-group" *ngIf="newTask.recurringType === 'monthday'">
+          <label for="taskRecurMD">Day of month</label>
+          <input id="taskRecurMD" type="number" [(ngModel)]="newTask.recurringValue" name="recurringValue" min="1" max="31" class="form-input">
+        </div>
+        <div class="form-group" *ngIf="newTask.recurringType === 'interval'">
+          <label for="taskRecurInt">Every (days)</label>
+          <input id="taskRecurInt" type="number" [(ngModel)]="newTask.recurringValue" name="recurringValue" min="1" max="365" class="form-input">
         </div>
       </div>
       <div class="form-group">
@@ -106,11 +150,19 @@
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label [for]="'editPriority-' + task.id">Priority</label>
-              <select [id]="'editPriority-' + task.id" [(ngModel)]="editForm.priority" name="priority" class="form-input">
-                <option value="low">Low</option>
+              <label [for]="'editUrgency-' + task.id">Urgency</label>
+              <select [id]="'editUrgency-' + task.id" [(ngModel)]="editForm.urgency" name="urgency" class="form-input">
+                <option value="time-sensitive">⚡ Time-sensitive</option>
                 <option value="medium">Medium</option>
+                <option value="low">Low</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label [for]="'editImportance-' + task.id">Importance</label>
+              <select [id]="'editImportance-' + task.id" [(ngModel)]="editForm.importance" name="importance" class="form-input">
                 <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
               </select>
             </div>
             <div class="form-group">
@@ -121,6 +173,42 @@
                 [(ngModel)]="editForm.dueDate"
                 name="dueDate"
                 class="form-input">
+            </div>
+          </div>
+          <div class="form-group recurring-toggle">
+            <label class="checkbox-label">
+              <input type="checkbox" [(ngModel)]="editForm.recurring" name="recurring">
+              <span>Recurring task</span>
+            </label>
+          </div>
+          <div *ngIf="editForm.recurring" class="form-row">
+            <div class="form-group">
+              <label [for]="'editRecurType-' + task.id">Repeats by</label>
+              <select [id]="'editRecurType-' + task.id" [(ngModel)]="editForm.recurringType" name="recurringType" class="form-input">
+                <option value="weekday">Day of week</option>
+                <option value="monthday">Day of month</option>
+                <option value="interval">Every N days</option>
+              </select>
+            </div>
+            <div class="form-group" *ngIf="editForm.recurringType === 'weekday'">
+              <label [for]="'editRecurWD-' + task.id">Day</label>
+              <select [id]="'editRecurWD-' + task.id" [(ngModel)]="editForm.recurringValue" name="recurringValue" class="form-input">
+                <option [ngValue]="0">Sunday</option>
+                <option [ngValue]="1">Monday</option>
+                <option [ngValue]="2">Tuesday</option>
+                <option [ngValue]="3">Wednesday</option>
+                <option [ngValue]="4">Thursday</option>
+                <option [ngValue]="5">Friday</option>
+                <option [ngValue]="6">Saturday</option>
+              </select>
+            </div>
+            <div class="form-group" *ngIf="editForm.recurringType === 'monthday'">
+              <label [for]="'editRecurMD-' + task.id">Day of month</label>
+              <input [id]="'editRecurMD-' + task.id" type="number" [(ngModel)]="editForm.recurringValue" name="recurringValue" min="1" max="31" class="form-input">
+            </div>
+            <div class="form-group" *ngIf="editForm.recurringType === 'interval'">
+              <label [for]="'editRecurInt-' + task.id">Every (days)</label>
+              <input [id]="'editRecurInt-' + task.id" type="number" [(ngModel)]="editForm.recurringValue" name="recurringValue" min="1" max="365" class="form-input">
             </div>
           </div>
           <div class="form-group">
@@ -164,9 +252,13 @@
             </div>
           </div>
           <div class="task-actions">
-            <span class="priority-badge" [ngClass]="getPriorityClass(task.priority || 'medium')">
-              {{ task.priority || 'medium' }}
+            <span class="urgency-badge" [ngClass]="getUrgencyClass(task.urgency || 'medium')" [title]="'Urgency: ' + (task.urgency || 'medium')">
+              {{ task.urgency === 'time-sensitive' ? '⚡' : '' }}{{ task.urgency || 'medium' }}
             </span>
+            <span class="importance-badge" [ngClass]="getImportanceClass(task.importance || 'medium')" [title]="'Importance: ' + (task.importance || 'medium')">
+              {{ task.importance || 'medium' }}
+            </span>
+            <i class="fas fa-redo recurring-icon" *ngIf="task.recurring" [title]="getRecurringLabel(task)"></i>
             <button class="btn-edit" (click)="startEditTask(task)" title="Edit task">
               ✏️
             </button>
@@ -195,6 +287,15 @@
               • Completed: {{ formatDate(task.completedAt) }}
             </span>
           </div>
+        </div>
+
+        <!-- Recurring info -->
+        <div class="recurring-info" *ngIf="task.recurring">
+          <i class="fas fa-redo"></i>
+          <span>{{ getRecurringLabel(task) }}</span>
+          <ng-container *ngIf="getLastCompletion(task) as lc">
+            <span class="last-completion"> · Last done {{ lc.date }} by {{ lc.by }}</span>
+          </ng-container>
         </div>
       </div>
     </div>

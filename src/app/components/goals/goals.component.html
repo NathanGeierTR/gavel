@@ -1,0 +1,111 @@
+<div class="goals-page">
+
+  <div class="goals-header">
+    <h2><i class="fas fa-bullseye"></i> Yearly Goals</h2>
+    <p class="subtitle">Track your work goals by year — referenced automatically when you query the AI agent.</p>
+  </div>
+
+  <!-- New goal form -->
+  <div class="new-goal-card">
+    <h3>Add a Goal</h3>
+    <div class="form-row">
+      <input
+        type="text"
+        [(ngModel)]="newTitle"
+        (keydown)="onNewKeyDown($event)"
+        placeholder="Goal title"
+        class="input-title"
+        [disabled]="isSubmitting"
+        maxlength="200" />
+      <select [(ngModel)]="newYear" class="select-year" [disabled]="isSubmitting" aria-label="Year">
+        <option *ngFor="let y of years" [value]="y">{{ y }}</option>
+      </select>
+    </div>
+    <textarea
+      [(ngModel)]="newDescription"
+      (keydown)="onNewKeyDown($event)"
+      placeholder="Description — context, success criteria, notes… (Ctrl+Enter to save)"
+      rows="3"
+      class="entry-textarea"
+      [disabled]="isSubmitting">
+    </textarea>
+    <button class="btn-submit" (click)="addGoal()" [disabled]="!newTitle.trim() || isSubmitting">
+      <i class="fas fa-plus"></i>
+      {{ isSubmitting ? 'Saving...' : 'Add Goal' }}
+    </button>
+  </div>
+
+  <!-- Year filter -->
+  <div class="year-tabs" *ngIf="goals.length > 0">
+    <button
+      *ngFor="let y of years"
+      class="year-tab"
+      [class.active]="viewYear === y"
+      (click)="viewYear = y">
+      {{ y }}
+      <span class="year-count" *ngIf="countForYear(y) > 0">{{ countForYear(y) }}</span>
+    </button>
+  </div>
+
+  <!-- Goals list -->
+  <div class="goals-list" *ngIf="goalsForSelectedYear.length > 0">
+    <div class="goal-card" *ngFor="let goal of goalsForSelectedYear; let i = index">
+
+      <!-- Edit mode -->
+      <ng-container *ngIf="editingId === goal.id; else viewMode">
+        <div class="edit-form">
+          <div class="form-row">
+            <input type="text" [(ngModel)]="editTitle" class="input-title" [disabled]="isSavingEdit" placeholder="Goal title" />
+            <select [(ngModel)]="editYear" class="select-year" [disabled]="isSavingEdit" aria-label="Year">
+              <option *ngFor="let y of years" [value]="y">{{ y }}</option>
+            </select>
+          </div>
+          <textarea
+            [(ngModel)]="editDescription"
+            rows="3"
+            class="entry-textarea"
+            [disabled]="isSavingEdit"
+            placeholder="Description">
+          </textarea>
+          <div class="edit-actions">
+            <button class="btn-save-edit" (click)="saveEdit()" [disabled]="!editTitle.trim() || isSavingEdit">
+              <i class="fas fa-check"></i>
+              {{ isSavingEdit ? 'Saving...' : 'Save' }}
+            </button>
+            <button class="btn-cancel-edit" (click)="cancelEdit()" [disabled]="isSavingEdit">
+              <i class="fas fa-times"></i>
+              Cancel
+            </button>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- View mode -->
+      <ng-template #viewMode>
+        <div class="goal-meta">
+          <span class="goal-number">{{ i + 1 }}</span>
+          <span class="goal-title">{{ goal.title }}</span>
+          <button class="btn-edit" (click)="startEdit(goal)" aria-label="Edit goal">
+            <i class="fas fa-pencil-alt"></i>
+          </button>
+          <button class="btn-delete" (click)="deleteGoal(goal.id)" [disabled]="deletingId === goal.id" aria-label="Delete goal">
+            <i class="fas fa-trash-alt"></i>
+          </button>
+        </div>
+        <p class="goal-description" *ngIf="goal.description">{{ goal.description }}</p>
+      </ng-template>
+
+    </div>
+  </div>
+
+  <div class="empty-state" *ngIf="goalsForSelectedYear.length === 0 && goals.length > 0">
+    <i class="fas fa-bullseye"></i>
+    <p>No goals for {{ viewYear }}. Add one above.</p>
+  </div>
+
+  <div class="empty-state" *ngIf="goals.length === 0">
+    <i class="fas fa-bullseye"></i>
+    <p>No goals yet. Add your first goal above.</p>
+  </div>
+
+</div>

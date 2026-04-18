@@ -34,6 +34,12 @@
           <i class="fas fa-book-open"></i>
         </button>
 
+        <button class="sidenav-btn" [class.active]="currentView === 'goals'"
+                (click)="navigateTo('goals')" data-label="Yearly Goals" aria-label="Yearly Goals"
+                (touchstart)="onNavTouchStart($event, 'Yearly Goals', 'bottom-right')" (touchend)="onNavTouchEnd()" (touchcancel)="onNavTouchEnd()">
+          <i class="fas fa-bullseye"></i>
+        </button>
+
         <button class="sidenav-btn" [class.active]="currentView === 'open-arena-chat'"
                 (click)="navigateTo('open-arena-chat')" data-label="Open Arena Chat" aria-label="Open Arena Chat"
                 (touchstart)="onNavTouchStart($event, 'Open Arena Chat', 'bottom-right')" (touchend)="onNavTouchEnd()" (touchcancel)="onNavTouchEnd()">
@@ -86,6 +92,7 @@
       <app-dashboard *ngIf="currentView === 'dashboard'"></app-dashboard>
       <app-connections *ngIf="currentView === 'connections'"></app-connections>
       <app-journal *ngIf="currentView === 'journal'"></app-journal>
+      <app-goals *ngIf="currentView === 'goals'"></app-goals>
       <app-open-arena-chat *ngIf="currentView === 'open-arena-chat'"></app-open-arena-chat>
     </main>
   </div>

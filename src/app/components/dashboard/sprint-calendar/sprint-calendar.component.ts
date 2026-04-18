@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { AdoService, AdoSprint } from '../../../services/ado.service';
 import { Subject, takeUntil } from 'rxjs';
 
@@ -14,7 +14,7 @@ interface CalendarDay {
 @Component({
   selector: 'app-sprint-calendar',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, DatePipe],
   templateUrl: './sprint-calendar.component.html',
   styleUrl: './sprint-calendar.component.scss'
 })
@@ -29,11 +29,13 @@ export class SprintCalendarComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   
   calendarDays: CalendarDay[] = [];
+  monthDays: CalendarDay[] = [];
   today = new Date();
   currentMonth = new Date();
   monthName = '';
   loading = false;
   error: string | null = null;
+  showPopover = false;
 
   constructor(private adoService: AdoService) {}
 
@@ -86,6 +88,7 @@ export class SprintCalendarComponent implements OnInit, OnDestroy {
       // Regenerate calendar with new sprint dates
       this.calendarDays = [];
       this.generateMonthCalendar();
+      this.buildSprintDays();
     } else {
       console.warn('No active sprint found for today\'s date');
       this.error = 'No active sprint';
@@ -175,8 +178,41 @@ export class SprintCalendarComponent implements OnInit, OnDestroy {
 
   getDaysRemaining(): number {
     if (!this.currentSprint) return 0;
-    
-    const daysLeft = Math.ceil((this.currentSprint.endDate.getTime() - this.today.getTime()) / (1000 * 60 * 60 * 24));
-    return Math.max(0, daysLeft);
+    const end = new Date(this.currentSprint.endDate.getFullYear(), this.currentSprint.endDate.getMonth(), this.currentSprint.endDate.getDate());
+    const tomorrow = new Date(this.today.getFullYear(), this.today.getMonth(), this.today.getDate() + 1);
+    let count = 0;
+    for (let d = new Date(tomorrow); d <= end; d.setDate(d.getDate() + 1)) {
+      const dow = d.getDay();
+      if (dow !== 0 && dow !== 6) count++;
+    }
+    return count;
+  }
+
+  togglePopover(event: MouseEvent) {
+    event.stopPropagation();
+    if (window.innerWidth > 600) return;
+    this.showPopover = !this.showPopover;
+  }
+
+  closePopover() {
+    this.showPopover = false;
+  }
+
+  buildSprintDays() {
+    if (!this.currentSprint) { this.monthDays = []; return; }
+    const days: CalendarDay[] = [];
+    const start = new Date(this.currentSprint.startDate.getFullYear(), this.currentSprint.startDate.getMonth(), this.currentSprint.startDate.getDate());
+    const end = new Date(this.currentSprint.endDate.getFullYear(), this.currentSprint.endDate.getMonth(), this.currentSprint.endDate.getDate());
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      const date = new Date(d);
+      days.push({
+        date,
+        isToday: this.isSameDay(date, this.today),
+        isWeekend: date.getDay() === 0 || date.getDay() === 6,
+        isInSprint: true,
+        isCurrentMonth: date.getMonth() === this.today.getMonth()
+      });
+    }
+    this.monthDays = days;
   }
 }

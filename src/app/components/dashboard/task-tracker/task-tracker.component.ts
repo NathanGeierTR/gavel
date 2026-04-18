@@ -23,9 +23,13 @@ export class TaskTrackerComponent implements OnInit, OnDestroy {
   newTask = {
     title: '',
     description: '',
-    priority: 'medium' as 'low' | 'medium' | 'high',
+    urgency: 'medium' as 'time-sensitive' | 'medium' | 'low',
+    importance: 'medium' as 'low' | 'medium' | 'high',
     dueDate: '',
-    tags: ''
+    tags: '',
+    recurring: false,
+    recurringType: 'weekday' as 'weekday' | 'monthday' | 'interval',
+    recurringValue: 1
   };
 
   // Edit Task
@@ -33,9 +37,13 @@ export class TaskTrackerComponent implements OnInit, OnDestroy {
   editForm = {
     title: '',
     description: '',
-    priority: 'medium' as 'low' | 'medium' | 'high',
+    urgency: 'medium' as 'time-sensitive' | 'medium' | 'low',
+    importance: 'medium' as 'low' | 'medium' | 'high',
     dueDate: '',
-    tags: ''
+    tags: '',
+    recurring: false,
+    recurringType: 'weekday' as 'weekday' | 'monthday' | 'interval',
+    recurringValue: 1
   };
 
   constructor(private taskService: TaskService) {}
@@ -54,13 +62,24 @@ export class TaskTrackerComponent implements OnInit, OnDestroy {
   }
 
   get filteredTasks(): Task[] {
-    return this.tasks.filter(task => {
-      const statusMatch = this.selectedFilter === 'all' || 
-                         (this.selectedFilter === 'completed' && task.completed) ||
-                         (this.selectedFilter === 'pending' && !task.completed);
-      const priorityMatch = this.selectedPriority === 'all' || task.priority === this.selectedPriority;
-      return statusMatch && priorityMatch;
-    });
+    return this.tasks
+      .filter(task => {
+        const statusMatch = this.selectedFilter === 'all' ||
+                           (this.selectedFilter === 'completed' && task.completed) ||
+                           (this.selectedFilter === 'pending' && !task.completed);
+        const priorityMatch = this.selectedPriority === 'all' || task.priority === this.selectedPriority;
+        return statusMatch && priorityMatch;
+      })
+      .sort((a, b) => {
+        if (a.completed !== b.completed) return a.completed ? 1 : -1;
+        return this.taskSortScore(a) - this.taskSortScore(b);
+      });
+  }
+
+  private taskSortScore(task: Task): number {
+    const uRank: Record<string, number> = { 'time-sensitive': 0, 'medium': 1, 'low': 2 };
+    const iRank: Record<string, number> = { 'high': 0, 'medium': 1, 'low': 2 };
+    return (uRank[task.urgency ?? 'medium'] ?? 1) * 3 + (iRank[task.importance ?? 'medium'] ?? 1);
   }
 
   get tasksByStatus() {
@@ -83,9 +102,13 @@ export class TaskTrackerComponent implements OnInit, OnDestroy {
     this.newTask = {
       title: '',
       description: '',
-      priority: 'medium',
+      urgency: 'medium',
+      importance: 'medium',
       dueDate: '',
-      tags: ''
+      tags: '',
+      recurring: false,
+      recurringType: 'weekday',
+      recurringValue: 1
     };
   }
 
@@ -102,9 +125,13 @@ export class TaskTrackerComponent implements OnInit, OnDestroy {
     this.taskService.addTask({
       title: this.newTask.title.trim(),
       description: this.newTask.description?.trim(),
-      priority: this.newTask.priority,
+      urgency: this.newTask.urgency,
+      importance: this.newTask.importance,
       dueDate: this.newTask.dueDate ? new Date(this.newTask.dueDate) : undefined,
-      tags: tagsArray
+      tags: tagsArray,
+      recurring: this.newTask.recurring,
+      recurringType: this.newTask.recurring ? this.newTask.recurringType : undefined,
+      recurringValue: this.newTask.recurring ? this.newTask.recurringValue : undefined
     });
 
     this.toggleNewTaskForm();
@@ -125,9 +152,13 @@ export class TaskTrackerComponent implements OnInit, OnDestroy {
     this.editForm = {
       title: task.title,
       description: task.description || '',
-      priority: task.priority || 'medium',
+      urgency: task.urgency || 'medium',
+      importance: task.importance || 'medium',
       dueDate: task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : '',
-      tags: task.tags?.join(', ') || ''
+      tags: task.tags?.join(', ') || '',
+      recurring: task.recurring || false,
+      recurringType: task.recurringType || 'weekday',
+      recurringValue: task.recurringValue ?? 1
     };
   }
 
@@ -144,9 +175,13 @@ export class TaskTrackerComponent implements OnInit, OnDestroy {
     this.taskService.updateTask(this.editingTaskId, {
       title: this.editForm.title.trim(),
       description: this.editForm.description?.trim(),
-      priority: this.editForm.priority,
+      urgency: this.editForm.urgency,
+      importance: this.editForm.importance,
       dueDate: this.editForm.dueDate ? new Date(this.editForm.dueDate) : undefined,
-      tags: tagsArray
+      tags: tagsArray,
+      recurring: this.editForm.recurring,
+      recurringType: this.editForm.recurring ? this.editForm.recurringType : undefined,
+      recurringValue: this.editForm.recurring ? this.editForm.recurringValue : undefined
     });
 
     this.cancelEdit();
@@ -157,9 +192,13 @@ export class TaskTrackerComponent implements OnInit, OnDestroy {
     this.editForm = {
       title: '',
       description: '',
-      priority: 'medium',
+      urgency: 'medium',
+      importance: 'medium',
       dueDate: '',
-      tags: ''
+      tags: '',
+      recurring: false,
+      recurringType: 'weekday',
+      recurringValue: 1
     };
   }
 
@@ -180,6 +219,37 @@ export class TaskTrackerComponent implements OnInit, OnDestroy {
       'high': 'priority-high'
     };
     return priorityClasses[priority] || '';
+  }
+
+  getUrgencyClass(urgency: string): string {
+    return { 'time-sensitive': 'urgency-critical', 'medium': 'urgency-medium', 'low': 'urgency-low' }[urgency] || 'urgency-medium';
+  }
+
+  getImportanceClass(importance: string): string {
+    return { 'high': 'importance-high', 'medium': 'importance-medium', 'low': 'importance-low' }[importance] || 'importance-medium';
+  }
+
+  getRecurringLabel(task: Task): string {
+    if (!task.recurring || !task.recurringType) return '';
+    const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    switch (task.recurringType) {
+      case 'weekday': return `Repeats every ${days[task.recurringValue ?? 0]}`;
+      case 'monthday': return `Repeats on the ${task.recurringValue}${this.ordinal(task.recurringValue ?? 1)} of each month`;
+      case 'interval': return `Repeats every ${task.recurringValue} day${task.recurringValue !== 1 ? 's' : ''}`;
+      default: return '';
+    }
+  }
+
+  private ordinal(n: number): string {
+    const s = ['th','st','nd','rd'];
+    const v = n % 100;
+    return s[(v - 20) % 10] || s[v] || s[0];
+  }
+
+  getLastCompletion(task: Task): { date: string; by: string } | null {
+    if (!task.completions || task.completions.length === 0) return null;
+    const last = task.completions[task.completions.length - 1];
+    return { date: this.formatDate(last.completedAt), by: last.completedByEmail || last.completedByUid };
   }
 
   isOverdue(task: Task): boolean {

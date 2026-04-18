@@ -1,9 +1,227 @@
-// Using Saffron Design System Colors
-$primary-color: var(--saf-color-brand-racing-green-600);
-$secondary-color: var(--saf-color-brand-racing-green-700);
-$success-color: var(--saf-color-brand-racing-green-400);
-$warning-color: var(--saf-color-brand-orange-300);
+// ─── Sprint Timeline Strip ─────────────────────────────────────────────────────
+
+// Sass variables
+$primary-color: #314b3e;
+$secondary-color: #6c757d;
+$success-color: #28a745;
+$danger-color: #dc3545;
+$warning-color: #ffc107;
+$info-color: #17a2b8;
+
+// Typography variables
+$font-family-sans-serif: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+$font-size-base: 1rem;
+$line-height-base: 1.5;
+
+// Breakpoints
+$breakpoint-sm: 576px;
+$breakpoint-md: 768px;
+$breakpoint-lg: 992px;
+$breakpoint-xl: 1200px;
+
+$widget-radius: 12px;
+$widget-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+$border-color: #e5e7eb;
 $today-color: var(--saf-color-orange-400);
+$weekday-color: var(--saf-color-brand-racing-green-500);
+$weekend-color: var(--saf-color-brand-racing-green-100);
+
+:host {
+  flex: 1 1 auto;
+}
+
+.sprint-strip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  height: 30px;
+  padding: 0 8px;
+  background: var(--saf-color-background-default);
+  border-radius: $widget-radius;
+  border: 1px solid $border-color;
+  box-shadow: $widget-shadow;
+  margin-bottom: 12px;
+  overflow: visible;
+  position: relative;
+  cursor: default;
+
+  @media (max-width: 768px) {
+    margin-bottom: 4px;
+    border-radius: 6px;
+  }
+}
+
+// ─── Left label ───────────────────────────────────────────────────────────────
+
+.sprint-strip-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+  white-space: nowrap;
+
+  @media (max-width: 600px) {
+    display: none;
+  }
+}
+
+.strip-icon {
+  font-size: 0.75rem;
+  color: var(--saf-color-brand-racing-green-500);
+  opacity: 0.8;
+}
+
+.sprint-name {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: var(--saf-color-text-strong);
+}
+
+.sprint-divider {
+  font-size: 0.6875rem;
+  color: var(--saf-color-text-subtle);
+  opacity: 0.5;
+}
+
+.sprint-month {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--saf-color-text-subtle);
+}
+
+// ─── Day squares row ──────────────────────────────────────────────────────────
+
+.sprint-days {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  overflow: hidden;
+  flex: 1;
+}
+
+.sprint-day {
+  flex: 1;
+  height: 20px;
+  max-width: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px;
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+  background: $weekday-color;
+  opacity: 0.85;
+  user-select: none;
+
+  &.weekend {
+    background: $weekend-color;
+    opacity: 1;
+  }
+
+  &.in-sprint:not(.today) {
+    outline: 1px solid rgba(255, 255, 255, 0.4);
+    outline-offset: -1px;
+  }
+
+  &.today {
+    background: $today-color;
+    opacity: 1;
+    font-weight: 800;
+    box-shadow: 0 0 0 1px rgba(255, 140, 0, 0.35);
+
+    @media (max-width: 600px) { cursor: pointer; }
+  }
+
+  &:not(.today) {
+    @media (max-width: 600px) { cursor: pointer; }
+  }
+}
+
+// ─── Sprint Popover ───────────────────────────────────────────────────────────
+
+.sprint-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 240px;
+  max-width: 320px;
+  width: max-content;
+  background: var(--saf-color-background-default);
+  border: 1px solid var(--saf-color-brand-sky-400);
+  border-radius: 8px;
+  padding: 0.75rem;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  z-index: 1000;
+  cursor: default;
+}
+
+.popover-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.625rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--saf-color-line-subtle);
+}
+
+.popover-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--saf-color-text-strong);
+  line-height: 1.4;
+  flex: 1;
+}
+
+.popover-close {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-size: 0.75rem;
+  color: var(--saf-color-text-subtle);
+  line-height: 1;
+  margin-top: 2px;
+
+  &:hover {
+    color: var(--saf-color-text-default);
+  }
+}
+
+.popover-detail {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  margin-bottom: 0.375rem;
+
+  i {
+    font-size: 0.6875rem;
+    color: var(--saf-color-text-subtle);
+    width: 12px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+}
+
+.detail-text {
+  flex: 1;
+  color: var(--saf-color-text-default);
+  line-height: 1.4;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.detail-sub {
+  font-size: 0.7rem;
+  color: var(--saf-color-text-subtle);
+}
+
 
 .sprint-calendar {
   .sprint-header {

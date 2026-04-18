@@ -2,9 +2,15 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import {
   Firestore, collection, doc, addDoc, updateDoc, deleteDoc,
-  onSnapshot, query, orderBy, writeBatch
+  onSnapshot, query, orderBy, writeBatch, arrayUnion
 } from '@angular/fire/firestore';
 import { Auth, user } from '@angular/fire/auth';
+
+export interface TaskCompletion {
+  completedAt: Date;
+  completedByUid: string;
+  completedByEmail?: string;
+}
 
 export interface Task {
   id: string;
@@ -15,6 +21,12 @@ export interface Task {
   createdAt: Date;
   completedAt?: Date;
   priority?: 'low' | 'medium' | 'high';
+  urgency?: 'time-sensitive' | 'medium' | 'low';
+  importance?: 'low' | 'medium' | 'high';
+  recurring?: boolean;
+  recurringType?: 'weekday' | 'monthday' | 'interval';
+  recurringValue?: number;
+  completions?: TaskCompletion[];
   tags?: string[];
   timeTracked?: number; // Total seconds tracked
   isTimeRunning?: boolean;
@@ -30,15 +42,18 @@ export class TaskService {
 
   private unsubscribeTasks: (() => void) | null = null;
   private currentUserId: string | null = null;
+  private currentUserEmail: string | undefined = undefined;
 
   constructor(private firestore: Firestore, private auth: Auth) {
     user(this.auth).subscribe(firebaseUser => {
       this.cleanup();
       if (firebaseUser) {
         this.currentUserId = firebaseUser.uid;
+        this.currentUserEmail = firebaseUser.email ?? undefined;
         this.subscribeTasks(firebaseUser.uid);
       } else {
         this.currentUserId = null;
+        this.currentUserEmail = undefined;
         this.tasksSubject.next([]);
       }
     });
@@ -73,6 +88,16 @@ export class TaskService {
       createdAt: data['createdAt']?.toDate?.() ?? new Date(data['createdAt']),
       completedAt: data['completedAt']?.toDate?.() ?? (data['completedAt'] ? new Date(data['completedAt']) : undefined),
       priority: data['priority'] ?? 'medium',
+      urgency: data['urgency'] ?? 'medium',
+      importance: data['importance'] ?? 'medium',
+      recurring: data['recurring'] ?? false,
+      recurringType: data['recurringType'] ?? undefined,
+      recurringValue: data['recurringValue'] ?? undefined,
+      completions: (data['completions'] ?? []).map((c: any) => ({
+        completedAt: typeof c.completedAt === 'string' ? new Date(c.completedAt) : (c.completedAt?.toDate?.() ?? new Date()),
+        completedByUid: c.completedByUid ?? '',
+        completedByEmail: c.completedByEmail ?? undefined
+      })),
       tags: data['tags'] ?? [],
       timeTracked: data['timeTracked'] ?? 0,
       isTimeRunning: data['isTimeRunning'] ?? false,
@@ -110,6 +135,12 @@ export class TaskService {
       createdAt: new Date(),
       completedAt: null,
       priority: taskData.priority ?? 'medium',
+      urgency: taskData.urgency ?? 'medium',
+      importance: taskData.importance ?? 'medium',
+      recurring: taskData.recurring ?? false,
+      recurringType: taskData.recurringType ?? null,
+      recurringValue: taskData.recurringValue ?? null,
+      completions: [],
       tags: taskData.tags ?? [],
       timeTracked: 0,
       isTimeRunning: false,
@@ -128,10 +159,19 @@ export class TaskService {
     const task = this.getTaskById(id);
     if (!task) return;
     const completed = !task.completed;
-    updateDoc(this.taskDocRef(id), {
+    const updates: Record<string, any> = {
       completed,
       completedAt: completed ? new Date() : null
-    }).catch(e => console.error('Failed to toggle task:', e));
+    };
+    if (completed && task.recurring && this.currentUserId) {
+      updates['completions'] = arrayUnion({
+        completedAt: new Date().toISOString(),
+        completedByUid: this.currentUserId,
+        completedByEmail: this.currentUserEmail ?? null
+      });
+    }
+    updateDoc(this.taskDocRef(id), updates)
+      .catch(e => console.error('Failed to toggle task:', e));
   }
 
   deleteTask(id: string): void {
