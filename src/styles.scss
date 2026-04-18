@@ -307,3 +307,25 @@ button {
     --saf-color-brand-amber-600: #7f4919;
     --saf-color-brand-amber-700: #553011;
 }
+
+// ── Touch long-press tooltip (managed by TouchTooltipService) ──────────────
+
+.touch-tooltip {
+  position: fixed;
+  background: var(--saf-color-gray-700, #333);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+  padding: 5px 10px;
+  border-radius: 6px;
+  pointer-events: none;
+  z-index: 9999;
+  font-family: "Arimo", sans-serif;
+  animation: fadeIn 0.12s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}

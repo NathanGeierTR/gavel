@@ -162,6 +162,7 @@
     align-items: center;
     justify-content: space-between;
     gap: 16px;
+    width: 100%;
   }
 
   .topbar-title {
@@ -188,6 +189,10 @@
   }
 
   .topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
     .ai-call-count {
       display: inline-flex;
       align-items: center;
@@ -292,23 +297,6 @@
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(6px); }
   to   { opacity: 1; transform: translateY(0); }
-}
-
-// ── Touch long-press tooltip ────────────────────────────────────
-
-.touch-tooltip {
-  position: fixed;
-  background: var(--saf-color-gray-700, #333);
-  color: #fff;
-  font-size: 0.78rem;
-  font-weight: 600;
-  white-space: nowrap;
-  padding: 5px 10px;
-  border-radius: 6px;
-  pointer-events: none;
-  z-index: 9999;
-  font-family: "Arimo", sans-serif;
-  animation: fadeIn 0.12s ease;
 }
 
 // ── Mobile ──────────────────────────────────────────────────────

@@ -1,71 +1,11 @@
 <div class="ask-widget">
 
-  <!-- ── Header ───────────────────────────────────────────────── -->
-  <div class="ask-header">
-    <span class="ask-icon"><i class="fas fa-brain"></i></span>
-    <h3 class="ask-title">Ask AI</h3>
-    <span class="ask-subtitle">Journal, tasks &amp; work items included as context</span>
-    <button
-      *ngIf="conversationHistory.length > 0"
-      class="clear-btn"
-      (click)="clearConversation()"
-      title="Clear conversation"
-      aria-label="Clear conversation">
-      <i class="fas fa-broom"></i>
-    </button>
+  <!-- ── Landing hero (empty state) ─────────────────────────── -->
+  <div class="chat-landing" *ngIf="conversationHistory.length === 0 && !loading && !anySkillLoading">
+    <h2 class="landing-heading">{{ greeting }}! What do you want to do?</h2>
   </div>
 
-  <!-- ── Not configured ────────────────────────────────────────── -->
-  <div class="not-configured" *ngIf="!isConfigured">
-    <i class="fas fa-key"></i>
-    GitHub AI token not configured. Go to <strong>Connections</strong> to set it up.
-  </div>
-
-  <!-- ── Input area ────────────────────────────────────────────── -->
-  <div class="input-row" *ngIf="isConfigured">
-    <textarea
-      class="ask-textarea"
-      [(ngModel)]="question"
-      (keydown)="onKeydown($event)"
-      placeholder="Ask about work context..."
-      rows="3"
-      [disabled]="loading || anySkillLoading"
-      aria-label="Ask AI a question"></textarea>
-    <button
-      class="send-btn"
-      (click)="ask()"
-      [disabled]="!question.trim() || loading || anySkillLoading"
-      aria-label="Send">
-      <i class="fas fa-paper-plane" *ngIf="!loading"></i>
-      <i class="fas fa-circle-notch fa-spin" *ngIf="loading"></i>
-    </button>
-  </div>
-
-  <div class="input-hint" *ngIf="isConfigured">
-    <kbd>Ctrl</kbd> + <kbd>Enter</kbd> to send
-  </div>
-
-  <!-- ── Skills ────────────────────────────────────────────────── -->
-  <div class="skills-row" *ngIf="isConfigured">
-    <span class="skills-label">Skills</span>
-    <button
-      *ngFor="let skill of skills"
-      class="skill-btn"
-      (click)="runSkill(skill.id)"
-      [disabled]="loading || anySkillLoading"
-      [title]="skill.description">
-      <i [class]="skill.icon" *ngIf="!skill.loading"></i>
-      <i class="fas fa-circle-notch fa-spin" *ngIf="skill.loading"></i>
-      {{ skill.label }}
-    </button>
-  </div>
-
-  <!-- ── Error ──────────────────────────────────────────────────── -->
-  <div class="error-row" *ngIf="error">
-    <i class="fas fa-exclamation-triangle"></i> {{ error }}
-  </div>
-
-  <!-- ── Conversation ───────────────────────────────────────────── -->
+  <!-- ── Conversation ─────────────────────────────────────────── -->
   <div class="conversation" #chatContainer *ngIf="conversationHistory.length > 0 || loading || anySkillLoading">
     <ng-container *ngFor="let msg of conversationHistory">
       <div class="msg" [class.user]="msg.role === 'user'" [class.assistant]="msg.role === 'assistant'">
@@ -89,6 +29,83 @@
         <span></span><span></span><span></span>
       </div>
     </div>
+  </div>
+
+  <!-- ── Error ──────────────────────────────────────────────────── -->
+  <div class="error-row" *ngIf="error">
+    <i class="fas fa-exclamation-triangle"></i> {{ error }}
+  </div>
+
+  <!-- ── Input card ────────────────────────────────────────────── -->
+  <div class="input-card" *ngIf="isConfigured">
+    <textarea
+      class="card-textarea"
+      [(ngModel)]="question"
+      (keydown)="onKeydown($event)"
+      placeholder="Ask the agent..."
+      rows="3"
+      [disabled]="loading || anySkillLoading"
+      aria-label="Ask AI a question"></textarea>
+
+    <div class="card-toolbar">
+      <div class="toolbar-left">
+        <button type="button" class="toolbar-icon-btn"
+          data-label="Context: journal, tasks, goals & calendar"
+          [appTouchTooltip]="'Context: journal, tasks, goals & calendar'"
+          touchTooltipAlign="bottom-right"
+          aria-label="Context: journal, tasks, goals and calendar included">
+          <i class="fas fa-database"></i>
+        </button>
+        <span class="toolbar-divider"></span>
+        <div class="skills-dropdown-wrapper" #skillsDropdownWrapper>
+          <button
+            type="button"
+            class="toolbar-skills-btn"
+            [class.open]="showSkillsDropdown"
+            (click)="showSkillsDropdown = !showSkillsDropdown"
+            [disabled]="loading || anySkillLoading">
+            <i class="fas fa-bolt"></i>
+            Skills
+            <i class="fas fa-chevron-down"></i>
+          </button>
+          <div class="skills-dropdown" *ngIf="showSkillsDropdown">
+            <button
+              *ngFor="let skill of skills"
+              type="button"
+              class="skill-dropdown-item"
+              (click)="runSkill(skill.id); showSkillsDropdown = false"
+              [disabled]="loading || anySkillLoading">
+              <span class="skill-item-header">
+                <i [class]="skill.icon"></i>
+                {{ skill.label }}
+              </span>
+              <span class="skill-item-desc">{{ skill.description }}</span>
+            </button>
+            <div *ngIf="conversationHistory.length > 0" class="skills-dropdown-footer">
+              <button type="button" class="clear-dropdown-btn" (click)="clearConversation(); showSkillsDropdown = false">
+                <i class="fas fa-broom"></i> Clear conversation
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        class="send-btn-circle"
+        (click)="ask()"
+        [disabled]="!question.trim() || loading || anySkillLoading"
+        aria-label="Send">
+        <i class="fas fa-arrow-up" *ngIf="!loading && !anySkillLoading"></i>
+        <i class="fas fa-circle-notch fa-spin" *ngIf="loading || anySkillLoading"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Not configured ─────────────────────────────────────────── -->
+  <div class="not-configured" *ngIf="!isConfigured">
+    <i class="fas fa-key"></i>
+    GitHub AI token not configured. Go to <strong>Connections</strong> to set it up.
   </div>
 
 </div>

@@ -1,6 +1,7 @@
-import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewChecked } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewChecked, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Auth } from '@angular/fire/auth';
 import { GitHubAIService, ChatMessage } from '../../../services/github-ai.service';
 import { JournalService, JournalEntry } from '../../../services/journal.service';
 import { TaskService, Task } from '../../../services/task.service';
@@ -10,6 +11,7 @@ import { CoworkerService } from '../../../services/coworker.service';
 import { MicrosoftCalendarService, CalendarEvent } from '../../../services/microsoft-calendar.service';
 import { Subject, combineLatest } from 'rxjs';
 import { takeUntil, debounceTime } from 'rxjs/operators';
+import { TouchTooltipDirective } from '../../../directives/touch-tooltip.directive';
 
 export interface Skill {
   id: string;
@@ -22,12 +24,21 @@ export interface Skill {
 @Component({
   selector: 'app-ai-ask-widget',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TouchTooltipDirective],
   templateUrl: './ai-ask-widget.component.html',
   styleUrls: ['./ai-ask-widget.component.scss']
 })
 export class AiAskWidgetComponent implements OnInit, OnDestroy, AfterViewChecked {
   @ViewChild('chatContainer') private chatContainer!: ElementRef;
+  @ViewChild('skillsDropdownWrapper') private skillsDropdownWrapper!: ElementRef;
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    if (this.showSkillsDropdown && this.skillsDropdownWrapper &&
+        !this.skillsDropdownWrapper.nativeElement.contains(event.target)) {
+      this.showSkillsDropdown = false;
+    }
+  }
 
   // Freeform ask
   question = '';
@@ -36,6 +47,7 @@ export class AiAskWidgetComponent implements OnInit, OnDestroy, AfterViewChecked
   isConfigured = false;
   conversationHistory: ChatMessage[] = [];
   private shouldScroll = false;
+  showSkillsDropdown = false;
 
   // Skills
   skills: Skill[] = [
@@ -51,7 +63,9 @@ export class AiAskWidgetComponent implements OnInit, OnDestroy, AfterViewChecked
   private destroy$ = new Subject<void>();
 
   constructor(
+    private elRef: ElementRef,
     private aiService: GitHubAIService,
+    private auth: Auth,
     private journalService: JournalService,
     private taskService: TaskService,
     private goalsService: GoalsService,
@@ -59,6 +73,18 @@ export class AiAskWidgetComponent implements OnInit, OnDestroy, AfterViewChecked
     private adoService: AdoService,
     private coworkerService: CoworkerService
   ) {}
+
+  get greeting(): string {
+    const h = new Date().getHours();
+    if (h < 12) return 'Good morning';
+    if (h < 17) return 'Good afternoon';
+    return 'Good evening';
+  }
+
+  get firstName(): string {
+    const name = this.auth.currentUser?.displayName ?? '';
+    return name.split(' ')[0] || 'there';
+  }
 
   ngOnInit(): void {
     this.isConfigured = this.aiService.isConfigured();

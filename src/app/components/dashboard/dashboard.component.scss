@@ -18,7 +18,6 @@ $text-secondary: #6b7280;
 
 .dashboard-container {
   padding: $dashboard-gap;
-  background: linear-gradient(135deg, var(--saf-color-brand-racing-green-100) 0%, var(--saf-color-background-subtle) 100%);
   min-height: calc(100vh - 120px);
 
   @media (max-width: 768px) {
@@ -97,10 +96,13 @@ $text-secondary: #6b7280;
     }
   }
 
-  // Ask AI Widget (max 2 columns)
+  // Ask AI Widget (max 2 columns) — flush card so it styles itself
   .ai-ask-widget {
     grid-column: span 2;
-    background: var(--saf-color-background-subtle);
+    background: none;
+    padding: 0;
+    border: none;
+    box-shadow: none;
 
     @media (max-width: 768px) {
       grid-column: span 1;
