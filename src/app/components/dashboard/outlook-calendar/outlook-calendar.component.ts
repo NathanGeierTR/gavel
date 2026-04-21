@@ -24,6 +24,7 @@ export class OutlookCalendarComponent implements OnInit, OnDestroy {
   selectedEvent: CalendarEvent | null = null;
   selectedDate = new Date();
   isMinimized = true;
+  showErrorDetail = false;
 
   private destroy$ = new Subject<void>();
 

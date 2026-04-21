@@ -160,7 +160,9 @@ export class MicrosoftCalendarService {
           this.clearConfiguration();
           this.errorSubject.next('Outlook Calendar token expired or invalid. Please reconnect.');
         } else {
-          this.errorSubject.next(`Failed to load calendar: ${error.message || 'Unknown error'}`);
+          const status = error.status ? `HTTP ${error.status}` : 'Network error';
+          const detail = error.error?.message || error.error?.error?.message || error.message || 'Unknown error';
+          this.errorSubject.next(`${status}: ${detail}`);
         }
         this.loadingSubject.next(false);
         return of([]);

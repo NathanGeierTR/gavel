@@ -121,8 +121,9 @@
       </button>
     </div>
     <div class="timeline-actions">
-      <span class="error-hint" *ngIf="error && !loading && isConfigured" title="{{ error }}">
+      <span class="error-hint" *ngIf="error && !loading && isConfigured" (click)="showErrorDetail = !showErrorDetail" title="{{ error }}">
         <i class="fas fa-exclamation-circle"></i>
+        <span class="error-hint-text" *ngIf="showErrorDetail">{{ error }}</span>
       </span>
       <button
         type="button"
