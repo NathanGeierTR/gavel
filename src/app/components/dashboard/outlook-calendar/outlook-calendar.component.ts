@@ -98,11 +98,19 @@ export class OutlookCalendarComponent implements OnInit, OnDestroy {
     this.navigationService.navigateTo('connections');
   }
 
+  /**
+   * Parse an MS Graph datetime string safely on all browsers, including iOS Safari.
+   * Graph returns up to 7 decimal places (e.g. "2026-04-20T09:00:00.0000000") which
+   * exceeds the ECMAScript ISO 8601 spec (max 3 digits for milliseconds).
+   * iOS Safari's JavaScriptCore returns Invalid Date for the non-standard format.
+   */
+  private parseDateTime(dateTimeStr: string): Date {
+    // Truncate fractional seconds beyond 3 digits to produce valid ISO 8601.
+    return new Date(dateTimeStr.replace(/(\.(\d{3}))\d+/, '$1'));
+  }
+
   formatTime(dateTimeString: string, timeZone?: string): string {
-    // Parse the datetime string - if it doesn't have timezone info, treat as UTC
-    const date = new Date(dateTimeString);
-    
-    // Format in local timezone
+    const date = this.parseDateTime(dateTimeString);
     return date.toLocaleTimeString('en-US', { 
       hour: 'numeric', 
       minute: '2-digit',
@@ -113,20 +121,20 @@ export class OutlookCalendarComponent implements OnInit, OnDestroy {
 
   isEventHappening(event: CalendarEvent): boolean {
     const now = this.currentTime;
-    const start = new Date(event.start.dateTime);
-    const end = new Date(event.end.dateTime);
+    const start = this.parseDateTime(event.start.dateTime);
+    const end = this.parseDateTime(event.end.dateTime);
     return now >= start && now <= end;
   }
 
   isEventUpcoming(event: CalendarEvent): boolean {
     const now = this.currentTime;
-    const start = new Date(event.start.dateTime);
+    const start = this.parseDateTime(event.start.dateTime);
     return start > now;
   }
 
   isEventPast(event: CalendarEvent): boolean {
     const now = this.currentTime;
-    const end = new Date(event.end.dateTime);
+    const end = this.parseDateTime(event.end.dateTime);
     return end < now;
   }
 
@@ -181,8 +189,8 @@ export class OutlookCalendarComponent implements OnInit, OnDestroy {
   }
 
   getEventHorizontalPosition(event: CalendarEvent): { left: number; width: number } {
-    const start = new Date(event.start.dateTime);
-    const end = new Date(event.end.dateTime);
+    const start = this.parseDateTime(event.start.dateTime);
+    const end = this.parseDateTime(event.end.dateTime);
     const startMinutes = start.getHours() * 60 + start.getMinutes();
     const endMinutes = end.getHours() * 60 + end.getMinutes();
     const left = (startMinutes / (24 * 60)) * 100;
@@ -200,8 +208,8 @@ export class OutlookCalendarComponent implements OnInit, OnDestroy {
   }
 
   getEventDuration(event: CalendarEvent): string {
-    const start = new Date(event.start.dateTime);
-    const end = new Date(event.end.dateTime);
+    const start = this.parseDateTime(event.start.dateTime);
+    const end = this.parseDateTime(event.end.dateTime);
     const durationMs = end.getTime() - start.getTime();
     const durationMinutes = Math.floor(durationMs / (1000 * 60));
     
@@ -275,8 +283,8 @@ export class OutlookCalendarComponent implements OnInit, OnDestroy {
   getNextEvent(): CalendarEvent | null {
     const now = this.currentTime;
     const upcoming = this.events
-      .filter(e => new Date(e.start.dateTime) > now)
-      .sort((a, b) => new Date(a.start.dateTime).getTime() - new Date(b.start.dateTime).getTime());
+      .filter(e => this.parseDateTime(e.start.dateTime) > now)
+      .sort((a, b) => this.parseDateTime(a.start.dateTime).getTime() - this.parseDateTime(b.start.dateTime).getTime());
     return upcoming[0] ?? null;
   }
 
@@ -284,7 +292,7 @@ export class OutlookCalendarComponent implements OnInit, OnDestroy {
     if (!this.isToday()) return null;
     const next = this.getNextEvent();
     if (!next) return null;
-    const diffMs = new Date(next.start.dateTime).getTime() - this.currentTime.getTime();
+    const diffMs = this.parseDateTime(next.start.dateTime).getTime() - this.currentTime.getTime();
     if (diffMs <= 0) return null;
     const totalMinutes = Math.floor(diffMs / 60000);
     const hours = Math.floor(totalMinutes / 60);
