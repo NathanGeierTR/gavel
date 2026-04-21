@@ -51,10 +51,23 @@ export class AiAskWidgetComponent implements OnInit, OnDestroy, AfterViewChecked
   private shouldScroll = false;
   showSkillsDropdown = false;
 
+  // Tracks assistant messages currently playing the reveal animation
+  animatingMessages = new Set<ChatMessage>();
+
+  replayAnimation(msg: ChatMessage): void {
+    this.animatingMessages.delete(msg);
+    // Allow Angular to remove the class first, then re-add on next frame
+    requestAnimationFrame(() => {
+      this.animatingMessages.add(msg);
+      setTimeout(() => this.animatingMessages.delete(msg), 750);
+    });
+  }
+
   // Skills
   skills: Skill[] = [
     { id: 'daily-summary', label: 'Daily Summary',  icon: 'fas fa-wand-sparkles', description: 'Motivational overview + top priorities for today', loading: false },
     { id: 'scrum-update',  label: 'Scrum Update',   icon: 'fas fa-users',          description: 'Standup update drafted from journal entries',   loading: false },
+    { id: 'sprint-retro',  label: 'Sprint Retro',   icon: 'fas fa-chart-bar',      description: 'Retro board suggestions based on your sprint activity', loading: false },
   ];
 
   // Live data
@@ -120,6 +133,18 @@ export class AiAskWidgetComponent implements OnInit, OnDestroy, AfterViewChecked
       .subscribe(() => (this.isConfigured = this.aiService.isConfigured()));
   }
 
+  toggleConversationExpanded(): void {
+    // Anchor to the bottom of the viewport: record how far the viewport top is
+    // from the document bottom, then restore that distance after reflow.
+    // When the conversation expands upward, the document grows and this
+    // compensates by scrolling down the same amount, keeping visible content stable.
+    const distanceFromBottom = document.documentElement.scrollHeight - window.scrollY;
+    this.conversationExpanded = !this.conversationExpanded;
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: document.documentElement.scrollHeight - distanceFromBottom, behavior: 'instant' });
+    });
+  }
+
   ngAfterViewChecked(): void {
     if (this.shouldScroll && this.chatContainer) {
       if (!this.conversationExpanded) {
@@ -176,9 +201,14 @@ export class AiAskWidgetComponent implements OnInit, OnDestroy, AfterViewChecked
     const skill = this.skills.find(s => s.id === skillId);
     if (!skill) return;
 
-    const prompt = skillId === 'daily-summary'
-      ? this.buildDailySummaryPrompt()
-      : this.buildScrumPrompt();
+    let prompt: string;
+    if (skillId === 'daily-summary') {
+      prompt = this.buildDailySummaryPrompt();
+    } else if (skillId === 'scrum-update') {
+      prompt = this.buildScrumPrompt();
+    } else {
+      prompt = this.buildSprintRetroPrompt();
+    }
 
     if (!prompt) return;
 
@@ -203,7 +233,12 @@ export class AiAskWidgetComponent implements OnInit, OnDestroy, AfterViewChecked
       timestamp: new Date()
     };
 
-    const userMsg: ChatMessage = { role: 'user', content: userText, timestamp: new Date() };
+    const userMsg: ChatMessage = {
+      role: 'user',
+      content: userText,
+      timestamp: new Date(),
+      ...(skill ? { skillLabel: skill.label, skillDescription: skill.description, skillPrompt: userText } : {})
+    };
     const historyForApi = [systemMsg, ...this.conversationHistory, userMsg];
 
     // Show user turn immediately
@@ -220,6 +255,9 @@ export class AiAskWidgetComponent implements OnInit, OnDestroy, AfterViewChecked
           if (skill) skill.loading = false;
           this.shouldScroll = true;
           this.saveChatHistory();
+          // Trigger reveal animation, then clear after it completes
+          this.animatingMessages.add(assistantMsg);
+          setTimeout(() => this.animatingMessages.delete(assistantMsg), 750);
         },
         error: (err) => {
           // Remove the optimistically-added user message
@@ -369,6 +407,34 @@ export class AiAskWidgetComponent implements OnInit, OnDestroy, AfterViewChecked
     }
 
     return lines.join('\n');
+  }
+
+  private buildSprintRetroPrompt(): string {
+    const hasData = this.journalEntries.length > 0 || this.calendarEvents.length > 0 || this.tasks.length > 0;
+    if (!hasData) {
+      this.error = 'No sprint data found — add some journal entries or tasks first!';
+      return '';
+    }
+    return `Based on my activity over the past sprint (roughly the last 2 weeks), generate concise retro board suggestions for each of the following 5 categories. For each category, provide 2-3 brief bullet points (1 sentence each). Draw from my journal entries, completed tasks, calendar meetings, ADO work items, and any coworker interactions.
+
+    Format the response exactly like this (use these exact category headings):
+
+    ## What went well?
+    - ...
+
+    ## What did we learn?
+    - ...
+
+    ## Shout-outs! (who was helpful to me)
+    - ...
+
+    ## What didn't go well?
+    - ...
+
+    ## Focus for improvement
+    - ...
+
+    Keep each bullet point brief and suitable for a shared team retro board. If there is not enough data for a category, still include it with a note like "Not enough data to suggest items — consider adding journal entries."`;
   }
 
   private buildDailySummaryPrompt(): string {
