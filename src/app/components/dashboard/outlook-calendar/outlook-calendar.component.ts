@@ -18,6 +18,7 @@ export class OutlookCalendarComponent implements OnInit, OnDestroy {
   error: string | null = null;
   isConfigured = false;
   showConfig = false;
+  showTokenInput = false;
   accessToken = '';
   currentTime = new Date();
   selectedEvent: CalendarEvent | null = null;
@@ -84,6 +85,7 @@ export class OutlookCalendarComponent implements OnInit, OnDestroy {
     this.calendarService.clearConfiguration();
     this.accessToken = '';
     this.isConfigured = false;
+    this.showTokenInput = false;
     this.events = [];
   }
 

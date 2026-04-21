@@ -16,7 +16,7 @@ $border-color: #e5e7eb;
   flex-direction: column;
   width: 100%;
   background: var(--saf-color-background-default);
-  border-radius: $widget-radius;
+  border-radius: 16px;
   border: 1px solid $border-color;
   box-shadow: $widget-shadow;
   margin-bottom: 12px;
@@ -37,22 +37,21 @@ $border-color: #e5e7eb;
 .disconnected-bar {
   display: flex;
   align-items: center;
-  height: 32px;
+  height: 28px;
   padding: 0 4px;
+  gap: 8px;
 }
 
 .disconnected-btn {
-  width: 32px;
-  height: 32px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   background-color: white;
-  border: 1px solid var(--saf-color-line-subtle);
-  border-radius: 6px;
+  border-radius: 12px;
   cursor: pointer;
   color: var(--saf-color-text-subtle);
-  margin-bottom: 8px;
+  font-size: 12px;
+  text-decoration: none;
   transition: background 0.15s, color 0.15s, border-color 0.15s, opacity 0.15s;
 
   i {
@@ -64,6 +63,82 @@ $border-color: #e5e7eb;
     border-color: var(--saf-color-brand-sky-400);
     color: var(--saf-color-brand-sky-500);
     opacity: 1;
+  }
+}
+
+// ─── Token Input Strip ────────────────────────────────────────────────────────
+
+.token-input-strip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px  ;
+
+  .strip-icon {
+    color: var(--saf-color-text-subtle);
+    font-size: 0.85rem;
+    flex-shrink: 0;
+  }
+
+  .token-input {
+    flex: 1;
+    height: 20px;
+    padding: 0 8px;
+    font-size: 0.78rem;
+    border: 1px solid var(--saf-color-line-subtle);
+    border-radius: 4px;
+    background: var(--saf-color-background-default);
+    color: var(--saf-color-text-default);
+    outline: none;
+    min-width: 0;
+
+    &::placeholder {
+      color: var(--saf-color-text-subtle);
+    }
+
+    &:focus {
+      border-color: var(--saf-color-brand-sky-400);
+    }
+  }
+
+  .btn-token-submit,
+  .btn-token-cancel {
+    width: 20px;
+    height: 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    border: 1px solid var(--saf-color-line-subtle);
+    background: transparent;
+    cursor: pointer;
+    font-size: 0.75rem;
+    flex-shrink: 0;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+  }
+
+  .btn-token-submit {
+    color: var(--saf-color-brand-sky-500);
+
+    &:hover:not(:disabled) {
+      background: var(--saf-color-brand-sky-400);
+      color: white;
+      border-color: var(--saf-color-brand-sky-400);
+    }
+
+    &:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+  }
+
+  .btn-token-cancel {
+    color: var(--saf-color-text-subtle);
+
+    &:hover {
+      background: var(--saf-color-background-subtle);
+      border-color: var(--saf-color-line-default);
+    }
   }
 }
 

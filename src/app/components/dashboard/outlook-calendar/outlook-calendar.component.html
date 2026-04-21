@@ -1,12 +1,51 @@
-<button 
-  *ngIf="!isConfigured"
-  type="button"
-  class="disconnected-btn"
-  (click)="goToConnections()"
-  title="Outlook Calendar not connected — click to connect"
-  aria-label="Outlook Calendar not connected, click to go to connections page">
-  <i class="fas fa-calendar-times" aria-hidden="true"></i>
-</button>
+<!-- NOT configured -->
+<div *ngIf="!isConfigured" class="outlook-timeline">
+
+  <!-- Link button → opens Graph Explorer in new tab and reveals token input -->
+    <a
+      href="https://developer.microsoft.com/en-us/graph/graph-explorer"
+      target="_blank"
+      rel="noopener noreferrer"
+      class="disconnected-btn"
+      (click)="showTokenInput = true"
+      title="Connect Outlook Calendar — opens Microsoft Graph Explorer"
+      aria-label="Connect Outlook Calendar, opens Microsoft Graph Explorer in a new tab">
+      
+      <span *ngIf="!showTokenInput" class="disconnected-bar">
+        <i class="fas fa-calendar-times" aria-hidden="true"></i>
+        <span>Get MS Outlook token</span>
+      </span>
+    </a>
+
+  <!-- Inline token input strip (shown after clicking the link) -->
+  <div *ngIf="showTokenInput" class="token-input-strip">
+    <i class="fas fa-calendar-alt strip-icon" aria-hidden="true"></i>
+    <input
+      type="text"
+      [(ngModel)]="accessToken"
+      name="accessToken"
+      placeholder="Paste your MS Graph access token…"
+      class="token-input"
+      (keydown.enter)="saveConfiguration()"
+      autocomplete="off" />
+    <button
+      type="button"
+      class="btn-token-submit"
+      (click)="saveConfiguration()"
+      [disabled]="!accessToken.trim()"
+      title="Connect">
+      <i class="fas fa-check"></i>
+    </button>
+    <button
+      type="button"
+      class="btn-token-cancel"
+      (click)="showTokenInput = false; accessToken = ''"
+      title="Cancel">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+
+</div>
 
 <div *ngIf="isConfigured" class="outlook-timeline" [class.is-minimized]="isMinimized">
 
