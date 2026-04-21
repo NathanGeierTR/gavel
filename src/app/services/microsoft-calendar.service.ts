@@ -82,11 +82,12 @@ export class MicrosoftCalendarService {
   getEventsForRange(start: Date, end: Date): Observable<CalendarEvent[]> {
     if (!this.accessToken) return of([]);
 
-    const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    // No Prefer header — let Graph return UTC (Z-suffixed) ISO 8601 strings.
+    // Timezone-naive strings returned by outlook.timezone are misinterpreted
+    // by iOS Safari (treated as UTC instead of local time).
     const headers = new HttpHeaders({
       'Authorization': `Bearer ${this.accessToken}`,
-      'Content-Type': 'application/json',
-      'Prefer': `outlook.timezone="${userTimeZone}"`
+      'Content-Type': 'application/json'
     });
 
     const startStr = start.toISOString();
@@ -127,21 +128,23 @@ export class MicrosoftCalendarService {
     this.loadingSubject.next(true);
     this.errorSubject.next(null);
 
+    // Build a UTC window that covers the entire local calendar day.
+    // Using setHours(0,0,0,0) gives midnight local time; toISOString() converts
+    // that to UTC — so the window is already correct for any timezone.
     const startOfDay = new Date(date);
     startOfDay.setHours(0, 0, 0, 0);
-    const endOfDay = new Date(startOfDay);
-    endOfDay.setDate(endOfDay.getDate() + 1);
+    const endOfDay = new Date(date);
+    endOfDay.setHours(23, 59, 59, 999);
 
     const startDateTime = startOfDay.toISOString();
     const endDateTime = endOfDay.toISOString();
 
-    // Get user's local timezone
-    const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-
+    // No Prefer header — let Graph return UTC (Z-suffixed) ISO 8601 strings.
+    // Timezone-naive strings returned by outlook.timezone are misinterpreted
+    // by iOS Safari (treated as UTC instead of local time).
     const headers = new HttpHeaders({
       'Authorization': `Bearer ${this.accessToken}`,
-      'Content-Type': 'application/json',
-      'Prefer': `outlook.timezone="${userTimeZone}"`
+      'Content-Type': 'application/json'
     });
 
     const url = `https://graph.microsoft.com/v1.0/me/calendarview?startDateTime=${startDateTime}&endDateTime=${endDateTime}&$orderby=start/dateTime`;
