@@ -225,11 +225,20 @@ export class OutlookCalendarComponent implements OnInit, OnDestroy {
    */
   private _rowCache: { events: CalendarEvent[]; map: Map<string, number> } | null = null;
 
+  get allDayEvents(): CalendarEvent[] {
+    return this.events.filter(e => e.isAllDay);
+  }
+
+  get timedEvents(): CalendarEvent[] {
+    return this.events.filter(e => !e.isAllDay);
+  }
+
   getEventRows(): Map<string, number> {
     if (this._rowCache && this._rowCache.events === this.events) {
       return this._rowCache.map;
     }
-    const sorted = [...this.events].sort((a, b) =>
+    // Only timed events go into the row-assignment algorithm
+    const sorted = [...this.timedEvents].sort((a, b) =>
       this.parseDateTime(a.start.dateTime).getTime() - this.parseDateTime(b.start.dateTime).getTime()
     );
     const rowEnd: number[] = []; // tracks the end-minute of the last event on each row
@@ -251,7 +260,7 @@ export class OutlookCalendarComponent implements OnInit, OnDestroy {
     return map;
   }
 
-  /** True when any two events overlap (i.e. need more than one row). */
+  /** True when any two timed events overlap (i.e. need more than one row). */
   get hasOverlappingEvents(): boolean {
     return this.getEventRows().size > 0 && Math.max(...Array.from(this.getEventRows().values())) > 0;
   }
@@ -347,6 +356,23 @@ export class OutlookCalendarComponent implements OnInit, OnDestroy {
     return this.selectedDate.getFullYear() === today.getFullYear() &&
            this.selectedDate.getMonth() === today.getMonth() &&
            this.selectedDate.getDate() === today.getDate();
+  }
+
+  getDateLabel(): string {
+    return this.selectedDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  }
+
+  getDateBadge(): string | null {
+    const today = new Date();
+    const diff = Math.round(
+      (new Date(this.selectedDate.getFullYear(), this.selectedDate.getMonth(), this.selectedDate.getDate()).getTime() -
+       new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime()) /
+      86400000
+    );
+    if (diff === 0)  return 'Today';
+    if (diff === -1) return 'Yesterday';
+    if (diff === 1)  return 'Tomorrow';
+    return null;
   }
 
   getNextEvent(): CalendarEvent | null {

@@ -545,8 +545,8 @@
     flex-shrink: 0;
     border-radius: 50%;
     border: none;
-    background: #314b3e;
-    color: #fff;
+    background: #fff;
+    color: var(--saf-color-green-500);
     font-size: 0.75rem;
     display: flex;
     align-items: center;
@@ -555,7 +555,6 @@
     transition: background 0.15s, transform 0.1s;
 
     &:hover {
-      background: #243829;
       transform: scale(1.06);
     }
 

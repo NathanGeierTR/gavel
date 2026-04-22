@@ -4,7 +4,7 @@
   box-sizing: border-box;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  --topbar-height: calc(48px + env(safe-area-inset-top));
+  --topbar-height: calc(36px + env(safe-area-inset-top));
 }
 
 // ── App shell layout ────────────────────────────────────────────
@@ -168,6 +168,9 @@
   background-position: 0 100%;
   background-size: cover;
   flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
 
   .topbar-inner {
     display: flex;

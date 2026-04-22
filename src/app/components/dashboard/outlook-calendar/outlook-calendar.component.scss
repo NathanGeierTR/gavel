@@ -242,6 +242,22 @@ $border-color: #e5e7eb;
   color: var(--saf-color-text-strong);
   padding: 0 4px;
   white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.date-badge {
+  font-size: 0.6rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--saf-color-brand-sky-500);
+  background: color-mix(in srgb, var(--saf-color-brand-sky-400) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--saf-color-brand-sky-400) 35%, transparent);
+  border-radius: 3px;
+  padding: 1px 4px;
+  line-height: 1.4;
 }
 
 .ctl-btn {
@@ -282,8 +298,15 @@ $border-color: #e5e7eb;
 }
 
 .today-btn {
-  font-weight: 600;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  justify-content: center;
   color: var(--saf-color-brand-sky-500);
+
+  i {
+    font-size: 0.75rem;
+  }
 }
 
 .collapse-btn {
@@ -421,6 +444,59 @@ $border-color: #e5e7eb;
   background: var(--saf-color-red-500);
   color: white;
   &:hover { background: var(--saf-color-red-600); }
+}
+
+// ─── All-day Banner ───────────────────────────────────────────────────────────
+
+.allday-banner {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px 3px 10px;
+  border-top: 1px solid var(--saf-color-line-subtle);
+  flex-wrap: wrap;
+  min-height: 24px;
+}
+
+.allday-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--saf-color-text-subtle);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.allday-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.allday-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 8px;
+  border-radius: 3px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: #fff;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: filter 0.15s;
+
+  &:hover { filter: brightness(1.12); }
+
+  &.active {
+    outline: 2px solid var(--saf-color-brand-racing-green-400);
+    outline-offset: 1px;
+    filter: brightness(1.08);
+  }
+
+  &.happening-now { background: var(--saf-color-orange-400); }
+  &.upcoming      { background: var(--saf-color-brand-racing-green-400); }
+  &.past          { background: var(--saf-color-brand-racing-green-300); opacity: 0.65; }
 }
 
 // ─── Timeline Strip ───────────────────────────────────────────────────────────

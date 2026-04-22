@@ -6,6 +6,7 @@ import { map, catchError } from 'rxjs/operators';
 export interface CalendarEvent {
   id: string;
   subject: string;
+  isAllDay?: boolean;
   start: {
     dateTime: string;
     timeZone: string;
@@ -145,11 +146,26 @@ export class MicrosoftCalendarService {
       'Prefer': `outlook.timezone="${userTimeZone}"`
     });
 
-    const url = `https://graph.microsoft.com/v1.0/me/calendarview?startDateTime=${startDateTime}&endDateTime=${endDateTime}&$orderby=start/dateTime`;
+    const url = `https://graph.microsoft.com/v1.0/me/calendarview?startDateTime=${startDateTime}&endDateTime=${endDateTime}&$orderby=start/dateTime&$select=id,subject,start,end,location,organizer,attendees,isOnlineMeeting,onlineMeeting,showAs,isAllDay`;
 
     return this.http.get<any>(url, { headers }).pipe(
       map(response => {
-        const events = response.value as CalendarEvent[];
+        const allEvents = response.value as CalendarEvent[];
+        // Filter out all-day events whose start date doesn't match the requested date.
+        // Graph returns all-day events spanning into the next day (end = next midnight)
+        // which would otherwise bleed into the following day's query.
+        const ymd = (d: Date) =>
+          `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        const requestedYmd = ymd(date);
+        const events = allEvents.filter(e => {
+          if (!e.isAllDay) return true;
+          // All-day event datetimes use date strings like "2026-04-21T00:00:00.0000000".
+          // Graph uses a half-open interval [start, end) where end is the *next* day
+          // for single-day events. Show the event on every day it spans.
+          const startDate = e.start.dateTime.substring(0, 10);
+          const endDate   = e.end.dateTime.substring(0, 10); // exclusive
+          return startDate <= requestedYmd && requestedYmd < endDate;
+        });
         this.eventsSubject.next(events);
         this.loadingSubject.next(false);
         return events;
