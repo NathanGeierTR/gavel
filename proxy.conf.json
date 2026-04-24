@@ -20,5 +20,13 @@
     },
     "onProxyReq": "function(proxyReq, req, res) { console.log('Proxying request to: ' + proxyReq.path); }",
     "onError": "function(err, req, res) { console.log('Proxy error: ' + err); }"
+  },
+  "/linear-api/**": {
+    "target": "https://api.linear.app",
+    "secure": false,
+    "changeOrigin": true,
+    "pathRewrite": {
+      "^/linear-api": ""
+    }
   }
 }

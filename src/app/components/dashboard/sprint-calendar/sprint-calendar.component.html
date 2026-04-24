@@ -2,14 +2,15 @@
 
   <!-- Left label -->
   <div class="sprint-strip-label">
-    <i class="fas fa-calendar-week strip-icon" aria-hidden="true"></i>
-    <span class="sprint-name" *ngIf="currentSprint">Sprint {{ currentSprint.number }}</span>
+    <i class="fas fa-rotate strip-icon" aria-hidden="true"></i>
+    <span class="sprint-name" *ngIf="currentSprint">{{ currentSprint.name || 'Cycle ' + currentSprint.number }}</span>
     <span class="sprint-divider" *ngIf="currentSprint" aria-hidden="true">·</span>
     <span class="sprint-month" *ngIf="currentSprint">{{ currentSprint.startDate | date:'MMM d' }} – {{ currentSprint.endDate | date:'MMM d' }}</span>
-    <span class="sprint-month" *ngIf="!currentSprint">No sprint</span>
+    <span class="sprint-month" *ngIf="!currentSprint && !loading">No active cycle</span>
+    <span class="sprint-month" *ngIf="loading"><i class="fas fa-spinner fa-spin"></i></span>
   </div>
 
-  <!-- Day squares for current sprint -->
+  <!-- Day squares for current cycle -->
   <div class="sprint-days">
     <div
       *ngFor="let day of monthDays"
@@ -23,11 +24,11 @@
     </div>
   </div>
 
-  <!-- Sprint details popover -->
+  <!-- Cycle details popover -->
   <div class="sprint-popover" *ngIf="showPopover && currentSprint" (click)="$event.stopPropagation()">
     <div class="popover-header">
-      <div class="popover-title">Sprint {{ currentSprint.number }}</div>
-      <button type="button" class="popover-close" (click)="closePopover()" aria-label="Close sprint details">
+      <div class="popover-title">{{ currentSprint.name || 'Cycle ' + currentSprint.number }}</div>
+      <button type="button" class="popover-close" (click)="closePopover()" aria-label="Close cycle details">
         <i class="fas fa-times" aria-hidden="true"></i>
       </button>
     </div>
@@ -35,7 +36,7 @@
       <i class="fas fa-calendar-day"></i>
       <div class="detail-text">
         {{ currentSprint.startDate | date:'EEE, MMM d' }} – {{ currentSprint.endDate | date:'EEE, MMM d' }}
-        <span class="detail-sub">{{ getDaysRemaining() }} day{{ getDaysRemaining() !== 1 ? 's' : '' }} left in sprint</span>
+        <span class="detail-sub">{{ getDaysRemaining() }} day{{ getDaysRemaining() !== 1 ? 's' : '' }} left in cycle</span>
       </div>
     </div>
   </div>

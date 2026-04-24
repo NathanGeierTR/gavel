@@ -9,6 +9,7 @@ import { OutlookCalendarComponent } from './outlook-calendar/outlook-calendar.co
 import { TimekeepingComponent } from './timekeeping/timekeeping.component';
 import { GithubPrWidgetComponent } from './github-pr-widget/github-pr-widget.component';
 import { AiAskWidgetComponent } from './ai-ask-widget/ai-ask-widget.component';
+import { LinearWorkItemsComponent } from './linear-work-items/linear-work-items.component';
 import { NavigationService } from '../../services/navigation.service';
 
 @Component({
@@ -23,7 +24,8 @@ import { NavigationService } from '../../services/navigation.service';
     CoworkerTimezonesComponent,
     OutlookCalendarComponent,
     TimekeepingComponent,
-    AiAskWidgetComponent
+    AiAskWidgetComponent,
+    LinearWorkItemsComponent
   ],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss'

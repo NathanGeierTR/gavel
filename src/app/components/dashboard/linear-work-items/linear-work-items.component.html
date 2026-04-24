@@ -1,0 +1,128 @@
+<div class="linear-work-items">
+
+  <!-- ── Header ─────────────────────────────────────────────── -->
+  <div class="widget-header">
+    <div class="widget-header-title">
+      <h2 class="widget-title">
+        <i class="fas fa-layer-group" aria-hidden="true"></i>
+        Linear
+      </h2>
+      <span class="viewer-badge" *ngIf="viewerName">{{ viewerName }}</span>
+    </div>
+
+    <div class="widget-toolbar">
+      <div class="widget-actions">
+        <button
+          type="button"
+          class="btn-secondary"
+          (click)="loadIssues()"
+          [disabled]="loading || !isConfigured"
+          title="Refresh issues">
+          <i class="fas" [class.fa-spinner]="loading" [class.fa-spin]="loading" [class.fa-rotate]="!loading"></i>
+          Refresh
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Not connected ──────────────────────────────────────── -->
+  <div class="not-configured" *ngIf="!isConfigured">
+    <i class="fas fa-plug-circle-xmark"></i>
+    <p>Connect your Linear account to see your assigned issues.</p>
+    <button type="button" class="btn-primary" (click)="goToConnections()">
+      <i class="fas fa-plug"></i> Connect Linear
+    </button>
+  </div>
+
+  <!-- ── Error ──────────────────────────────────────────────── -->
+  <div class="error-banner" *ngIf="error && !loading && isConfigured">
+    <i class="fas fa-exclamation-circle"></i>
+    <span>{{ error }}</span>
+    <button type="button" class="btn-retry" (click)="loadIssues()">
+      <i class="fas fa-rotate"></i> Retry
+    </button>
+  </div>
+
+  <!-- ── Loading skeleton ───────────────────────────────────── -->
+  <div class="skeleton-list" *ngIf="loading && issues.length === 0">
+    <div class="skeleton-row" *ngFor="let _ of [1,2,3,4]"></div>
+  </div>
+
+  <!-- ── Empty state ────────────────────────────────────────── -->
+  <div class="empty-state" *ngIf="!loading && isConfigured && issues.length === 0 && !error">
+    <i class="fas fa-circle-check"></i>
+    <p>No open issues assigned to you.</p>
+  </div>
+
+  <!-- ── Issue list ─────────────────────────────────────────── -->
+  <div class="issue-list" *ngIf="isConfigured && issues.length > 0">
+    <div
+      *ngFor="let issue of issues"
+      class="issue-row"
+      [class.is-overdue]="isOverdue(issue)"
+      (click)="openIssue(issue.url)"
+      role="button"
+      tabindex="0"
+      [attr.aria-label]="issue.identifier + ': ' + issue.title"
+      (keydown.enter)="openIssue(issue.url)"
+      (keydown.space)="openIssue(issue.url)">
+
+      <!-- Priority icon -->
+      <span class="priority-icon {{ getPriorityClass(issue.priority) }}" [title]="getPriorityLabel(issue.priority)">
+        <i class="fas {{ getPriorityIcon(issue.priority) }}" aria-hidden="true"></i>
+      </span>
+
+      <!-- State dot -->
+      <span
+        class="state-dot {{ getStateClass(issue.state.type) }}"
+        [style.background-color]="issue.state.color"
+        [title]="issue.state.name">
+      </span>
+
+      <!-- Main content -->
+      <div class="issue-content">
+        <div class="issue-top">
+          <span class="issue-identifier">{{ issue.identifier }}</span>
+          <span class="issue-title">{{ issue.title }}</span>
+        </div>
+        <div class="issue-meta">
+          <span class="meta-team">{{ issue.team.name }}</span>
+          <span class="meta-sep" *ngIf="issue.project">·</span>
+          <span class="meta-project" *ngIf="issue.project">{{ issue.project.name }}</span>
+          <span class="meta-sep" *ngIf="issue.cycle">·</span>
+          <span class="meta-cycle" *ngIf="issue.cycle">
+            <i class="fas fa-rotate" aria-hidden="true"></i>{{ issue.cycle.name }}
+          </span>
+          <!-- Labels -->
+          <ng-container *ngIf="issue.labels.nodes.length > 0">
+            <span class="meta-sep">·</span>
+            <span
+              *ngFor="let label of issue.labels.nodes"
+              class="label-chip"
+              [style.background-color]="label.color + '33'"
+              [style.border-color]="label.color"
+              [style.color]="label.color">
+              {{ label.name }}
+            </span>
+          </ng-container>
+        </div>
+      </div>
+
+      <!-- Due date -->
+      <span class="due-date" *ngIf="issue.dueDate" [class.overdue]="isOverdue(issue)">
+        <i class="fas fa-calendar-day" aria-hidden="true"></i>
+        {{ formatDate(issue.dueDate) }}
+      </span>
+
+      <!-- Estimate -->
+      <span class="estimate" *ngIf="issue.estimate !== null" [title]="issue.estimate + ' points'">
+        {{ issue.estimate }}
+      </span>
+
+      <!-- External link indicator -->
+      <i class="fas fa-arrow-up-right-from-square ext-icon" aria-hidden="true"></i>
+
+    </div>
+  </div>
+
+</div>

@@ -7,6 +7,7 @@ import { GitHubAIService } from '../../services/github-ai.service';
 import { GitHubPrService, DiagnosticInfo } from '../../services/github-pr.service';
 import { MicrosoftCalendarService } from '../../services/microsoft-calendar.service';
 import { MicrosoftTeamsService } from '../../services/microsoft-teams.service';
+import { LinearService } from '../../services/linear.service';
 
 @Component({
   selector: 'app-connections',
@@ -46,11 +47,18 @@ export class ConnectionsComponent implements OnInit, OnDestroy {
   adoConnected = false;
   adoProjects: { organization: string; project: string }[] = [];
 
+  // Linear
+  linearApiKey = '';
+  linearConnected = false;
+  linearSaved = false;
+  linearViewerName: string | null = null;
+
   constructor(
     private aiService: GitHubAIService,
     private githubPrService: GitHubPrService,
     private calendarService: MicrosoftCalendarService,
-    private teamsService: MicrosoftTeamsService
+    private teamsService: MicrosoftTeamsService,
+    private linearService: LinearService
   ) {}
 
   ngOnInit(): void {
@@ -102,6 +110,16 @@ export class ConnectionsComponent implements OnInit, OnDestroy {
       }
     } catch {
       this.adoProjects = [];
+    }
+
+    // Linear
+    this.linearApiKey = localStorage.getItem('linear-api-key') || '';
+    this.linearConnected = this.linearService.isConfigured();
+    this.linearService.viewer$.pipe(takeUntil(this.destroy$)).subscribe(v => {
+      this.linearViewerName = v?.name ?? null;
+    });
+    if (this.linearConnected) {
+      this.linearService.fetchViewer().subscribe();
     }
   }
 
@@ -207,5 +225,23 @@ export class ConnectionsComponent implements OnInit, OnDestroy {
 
   verifyPrToken(): void {
     this.githubPrService.verifyToken();
+  }
+
+  // Linear
+  saveLinear(): void {
+    const key = this.linearApiKey.trim();
+    if (!key) return;
+    this.linearService.initialize(key);
+    this.linearConnected = true;
+    this.linearSaved = true;
+    this.linearService.fetchViewer().subscribe();
+    setTimeout(() => (this.linearSaved = false), 3000);
+  }
+
+  disconnectLinear(): void {
+    this.linearService.clearConfiguration();
+    this.linearApiKey = '';
+    this.linearConnected = false;
+    this.linearViewerName = null;
   }
 }

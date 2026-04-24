@@ -1,0 +1,340 @@
+// ─── Shared vars ─────────────────────────────────────────────────────────────
+$border-color: #e5e7eb;
+$radius: 12px;
+$widget-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+
+// ─── Host ─────────────────────────────────────────────────────────────────────
+:host {
+  display: block;
+}
+
+// ─── Root ─────────────────────────────────────────────────────────────────────
+.linear-work-items {
+  border-radius: $radius;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+// ─── Header ───────────────────────────────────────────────────────────────────
+.widget-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 2px solid var(--saf-color-line-subtle);
+  padding-bottom: 8px;
+}
+
+.widget-header-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.widget-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0;
+  background: linear-gradient(
+    135deg,
+    var(--saf-color-brand-orange-400),
+    var(--saf-color-brand-orange-700)
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+
+  i {
+    color: var(--saf-color-brand-racing-green-600);
+    -webkit-text-fill-color: var(--saf-color-brand-racing-green-600);
+    font-size: 1.1rem;
+  }
+}
+
+.viewer-badge {
+  font-size: 0.72rem;
+  padding: 2px 8px;
+  border-radius: 100px;
+  background: var(--saf-color-background-subtle);
+  color: var(--saf-color-text-subtle);
+  border: 1px solid $border-color;
+}
+
+// ─── Toolbar ──────────────────────────────────────────────────────────────────
+.widget-toolbar {
+  display: flex;
+  align-items: center;
+
+  .widget-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+}
+
+.btn-primary,
+.btn-secondary {
+  padding: 0.4rem 0.75rem;
+  border: none;
+  border-radius: 100px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: opacity 0.15s;
+
+  &:disabled { opacity: 0.45; cursor: default; }
+}
+
+.btn-primary {
+  background: var(--saf-color-brand-orange-400);
+  color: #fff;
+  &:hover:not(:disabled) { opacity: 0.85; }
+}
+
+.btn-secondary {
+  background: var(--saf-color-background-subtle);
+  color: var(--saf-color-text-default);
+  border: 1px solid $border-color;
+  &:hover:not(:disabled) { background: var(--saf-color-background-default); }
+}
+
+// ─── Not configured ───────────────────────────────────────────────────────────
+.not-configured {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 32px 16px;
+  color: var(--saf-color-text-subtle);
+  text-align: center;
+
+  i { font-size: 2rem; }
+  p { margin: 0; font-size: 0.9rem; }
+}
+
+// ─── Error banner ─────────────────────────────────────────────────────────────
+.error-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: var(--saf-color-semantic-error-subtle);
+  color: var(--saf-color-semantic-error-strong);
+  font-size: 0.85rem;
+
+  .btn-retry {
+    margin-left: auto;
+    padding: 2px 8px;
+    border-radius: 4px;
+    border: 1px solid currentColor;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    font-size: 0.8rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+}
+
+// ─── Skeleton ─────────────────────────────────────────────────────────────────
+.skeleton-list { display: flex; flex-direction: column; gap: 8px; }
+
+.skeleton-row {
+  height: 52px;
+  border-radius: 8px;
+  background: linear-gradient(
+    90deg,
+    var(--saf-color-background-subtle) 25%,
+    var(--saf-color-line-subtle) 50%,
+    var(--saf-color-background-subtle) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+}
+
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+// ─── Empty state ──────────────────────────────────────────────────────────────
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 24px;
+  color: var(--saf-color-text-subtle);
+  font-size: 0.9rem;
+
+  i { font-size: 1.5rem; color: var(--saf-color-semantic-success); }
+  p { margin: 0; }
+}
+
+// ─── Issue list ───────────────────────────────────────────────────────────────
+.issue-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow-y: auto;
+}
+
+.issue-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+
+  &:hover, &:focus-visible {
+    background: var(--saf-color-background-subtle);
+    border-color: $border-color;
+    outline: none;
+  }
+
+  &.is-overdue {
+    background: var(--saf-color-semantic-error-subtle);
+    border-color: var(--saf-color-semantic-error);
+  }
+}
+
+// ─── Priority icon ────────────────────────────────────────────────────────────
+.priority-icon {
+  flex-shrink: 0;
+  width: 18px;
+  text-align: center;
+  font-size: 0.75rem;
+
+  &.priority-urgent { color: #ef4444; }
+  &.priority-high   { color: #f97316; }
+  &.priority-medium { color: #eab308; }
+  &.priority-low    { color: #6b7280; }
+  &.priority-none   { color: #d1d5db; }
+}
+
+// ─── State dot ────────────────────────────────────────────────────────────────
+.state-dot {
+  flex-shrink: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+
+  &.state-backlog  { background: transparent !important; border-color: currentColor; }
+  &.state-started  { border-radius: 3px; }
+}
+
+// ─── Issue content ────────────────────────────────────────────────────────────
+.issue-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.issue-top {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+}
+
+.issue-identifier {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--saf-color-text-subtle);
+  flex-shrink: 0;
+  font-family: monospace;
+}
+
+.issue-title {
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--saf-color-text-default);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.issue-meta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.72rem;
+  color: var(--saf-color-text-subtle);
+  flex-wrap: wrap;
+
+  .meta-sep { opacity: 0.5; }
+  .meta-cycle i { margin-right: 3px; font-size: 0.65rem; }
+}
+
+// ─── Labels ───────────────────────────────────────────────────────────────────
+.label-chip {
+  padding: 1px 6px;
+  border-radius: 100px;
+  border: 1px solid transparent;
+  font-size: 0.68rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+// ─── Due date ─────────────────────────────────────────────────────────────────
+.due-date {
+  flex-shrink: 0;
+  font-size: 0.72rem;
+  color: var(--saf-color-text-subtle);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  &.overdue { color: var(--saf-color-semantic-error-strong); font-weight: 600; }
+}
+
+// ─── Estimate ─────────────────────────────────────────────────────────────────
+.estimate {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--saf-color-background-subtle);
+  border: 1px solid $border-color;
+  font-size: 0.68rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--saf-color-text-subtle);
+}
+
+// ─── External link icon ───────────────────────────────────────────────────────
+.ext-icon {
+  flex-shrink: 0;
+  font-size: 0.65rem;
+  color: var(--saf-color-text-subtle);
+  opacity: 0;
+  transition: opacity 0.12s;
+
+  .issue-row:hover & { opacity: 0.6; }
+}
+
+// ─── Responsive ───────────────────────────────────────────────────────────────
+@media (max-width: 768px) {
+  .issue-row { padding: 6px 8px; }
+  .issue-title { font-size: 0.82rem; }
+}

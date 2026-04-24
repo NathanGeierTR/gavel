@@ -1,0 +1,238 @@
+import { Injectable } from '@angular/core';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { BehaviorSubject, Observable, of } from 'rxjs';
+import { map, catchError, tap } from 'rxjs/operators';
+import { environment } from '../../environments/environment';
+
+export interface LinearIssue {
+  id: string;
+  identifier: string;
+  title: string;
+  priority: number; // 0=none,1=urgent,2=high,3=medium,4=low
+  url: string;
+  updatedAt: string;
+  dueDate: string | null;
+  estimate: number | null;
+  state: {
+    name: string;
+    color: string;
+    type: string; // backlog, unstarted, started, completed, cancelled
+  };
+  team: { name: string };
+  labels: { nodes: { name: string; color: string }[] };
+  project: { name: string } | null;
+  cycle: {
+    id: string;
+    name: string;
+    number: number;
+    startsAt: string;
+    endsAt: string;
+    progress: number;
+    team: { name: string };
+  } | null;
+}
+
+export interface LinearViewer {
+  id: string;
+  name: string;
+  email: string;
+}
+
+export interface LinearCycle {
+  id: string;
+  name: string;
+  number: number;
+  startsAt: string;
+  endsAt: string;
+  team: { name: string };
+  progress: number; // 0–1
+}
+
+const STORAGE_KEY = 'linear-api-key';
+
+@Injectable({ providedIn: 'root' })
+export class LinearService {
+  private apiKey = '';
+
+  private issuesSubject = new BehaviorSubject<LinearIssue[]>([]);
+  readonly issues$ = this.issuesSubject.asObservable();
+
+  private loadingSubject = new BehaviorSubject<boolean>(false);
+  readonly loading$ = this.loadingSubject.asObservable();
+
+  private errorSubject = new BehaviorSubject<string | null>(null);
+  readonly error$ = this.errorSubject.asObservable();
+
+  private configuredSubject = new BehaviorSubject<boolean>(false);
+  readonly isConfigured$ = this.configuredSubject.asObservable();
+
+  private viewerSubject = new BehaviorSubject<LinearViewer | null>(null);
+  readonly viewer$ = this.viewerSubject.asObservable();
+
+  private activeCycleSubject = new BehaviorSubject<LinearCycle | null>(null);
+  readonly activeCycle$ = this.activeCycleSubject.asObservable();
+
+  constructor(private http: HttpClient) {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      this.apiKey = saved;
+      this.configuredSubject.next(true);
+    }
+  }
+
+  isConfigured(): boolean {
+    return this.configuredSubject.value;
+  }
+
+  initialize(apiKey: string): void {
+    this.apiKey = apiKey.trim();
+    localStorage.setItem(STORAGE_KEY, this.apiKey);
+    this.configuredSubject.next(true);
+  }
+
+  clearConfiguration(): void {
+    this.apiKey = '';
+    localStorage.removeItem(STORAGE_KEY);
+    this.configuredSubject.next(false);
+    this.issuesSubject.next([]);
+    this.viewerSubject.next(null);
+    this.activeCycleSubject.next(null);
+    this.errorSubject.next(null);
+  }
+
+  private get headers(): HttpHeaders {
+    return new HttpHeaders({
+      'Content-Type': 'application/json',
+      'Authorization': this.apiKey,
+    });
+  }
+
+  private gql<T>(query: string, variables?: Record<string, unknown>): Observable<T> {
+    return this.http.post<{ data: T; errors?: { message: string }[] }>(
+      `${environment.linearApiUrl}/graphql`,
+      { query, variables },
+      { headers: this.headers }
+    ).pipe(
+      map(res => {
+        if (res.errors?.length) throw new Error(res.errors.map(e => e.message).join('; '));
+        return res.data;
+      })
+    );
+  }
+
+  fetchViewer(): Observable<LinearViewer> {
+    const query = `query { viewer { id name email } }`;
+    return this.gql<{ viewer: LinearViewer }>(query).pipe(
+      map(d => d.viewer),
+      tap(v => this.viewerSubject.next(v)),
+      catchError(err => {
+        this.errorSubject.next(err.message ?? 'Failed to verify token');
+        throw err;
+      })
+    );
+  }
+
+  fetchMyIssues(): Observable<LinearIssue[]> {
+    if (!this.apiKey) return of([]);
+
+    const query = `
+      query MyIssues {
+        viewer {
+          assignedIssues(
+            filter: { state: { type: { nin: ["completed", "cancelled"] } } }
+            orderBy: updatedAt
+          ) {
+            nodes {
+              id
+              identifier
+              title
+              priority
+              url
+              updatedAt
+              dueDate
+              estimate
+              state { name color type }
+              team { name }
+              labels { nodes { name color } }
+              project { name }
+              cycle { id name number startsAt endsAt progress team { name } }
+            }
+          }
+        }
+      }
+    `;
+
+    this.loadingSubject.next(true);
+    this.errorSubject.next(null);
+
+    return this.gql<{ viewer: { assignedIssues: { nodes: LinearIssue[] } } }>(query).pipe(
+      map(d => d.viewer.assignedIssues.nodes),
+      tap(issues => {
+        this.issuesSubject.next(issues);
+        this.loadingSubject.next(false);
+        // Derive the active cycle from any issue that carries one
+        const today = new Date();
+        const activeCycle = issues
+          .map(i => i.cycle)
+          .filter((c): c is NonNullable<LinearIssue['cycle']> => c !== null)
+          .find(c => new Date(c.startsAt) <= today && new Date(c.endsAt) >= today)
+          ?? null;
+        if (activeCycle && !this.activeCycleSubject.value) {
+          this.activeCycleSubject.next(activeCycle);
+        }
+      }),
+      catchError(err => {
+        const msg = err.message ?? 'Failed to load Linear issues';
+        this.errorSubject.next(msg);
+        this.loadingSubject.next(false);
+        return of([]);
+      })
+    );
+  }
+
+  /**
+   * Fetch the active cycle (cycle whose date window contains today) across all
+   * teams the viewer belongs to.  Picks the first active cycle found.
+   */
+  fetchActiveCycle(): Observable<LinearCycle | null> {
+    if (!this.apiKey) return of(null);
+
+    const query = `
+      query ActiveCycle {
+        viewer {
+          teams {
+            nodes {
+              activeCycle {
+                id
+                name
+                number
+                startsAt
+                endsAt
+                progress
+                team { name }
+              }
+            }
+          }
+        }
+      }
+    `;
+
+    return this.gql<{ viewer: { teams: { nodes: { activeCycle: LinearCycle | null }[] } } }>(query).pipe(
+      map(d => {
+        const cycles = d.viewer.teams.nodes
+          .map(t => t.activeCycle)
+          .filter((c): c is LinearCycle => c !== null);
+        return cycles[0] ?? null;
+      }),
+      tap(cycle => {
+        this.activeCycleSubject.next(cycle);
+      }),
+      catchError(err => {
+        console.error('[Linear] fetchActiveCycle error:', err);
+        this.activeCycleSubject.next(null);
+        return of(null);
+      })
+    );
+  }
+}
+    

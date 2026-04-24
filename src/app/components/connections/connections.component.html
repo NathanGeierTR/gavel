@@ -331,5 +331,59 @@
       </div>
     </div>
 
+    <!-- ── Linear ────────────────────────────────────────────── -->
+    <div class="connection-card" [class.connected]="linearConnected">
+      <div class="card-header">
+        <div class="service-identity">
+          <i class="fas fa-layer-group card-icon linear-icon"></i>
+          <div>
+            <h3>Linear</h3>
+            <span class="service-description">Issues &amp; work items assigned to you</span>
+          </div>
+        </div>
+        <div class="status-container">
+          <span class="status-badge" [class.connected]="linearConnected" [class.disconnected]="!linearConnected">
+            <i class="fas" [class.fa-circle-check]="linearConnected" [class.fa-circle-xmark]="!linearConnected"></i>
+            {{ linearConnected ? 'Connected' : 'Not connected' }}
+          </span>
+          <div class="verified-identity" *ngIf="linearConnected && linearViewerName">
+            <i class="fas fa-circle-check verified-icon"></i>
+            Signed in as <strong>{{ linearViewerName }}</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <div class="help-link">
+          <a href="https://linear.app/settings/api" target="_blank" rel="noopener noreferrer">
+            <i class="fas fa-external-link-alt"></i> linear.app/settings/api
+          </a>
+          <span class="scope-note">Settings → API → <strong>Personal API keys</strong> → Create key</span>
+        </div>
+
+        <div class="form-group">
+          <label for="linear-api-key">Personal API Key</label>
+          <input
+            id="linear-api-key"
+            type="password"
+            [(ngModel)]="linearApiKey"
+            placeholder="lin_api_xxxxxxxxxxxx"
+            class="token-input"
+            autocomplete="off"
+            (keydown.enter)="saveLinear()">
+        </div>
+      </div>
+
+      <div class="card-actions">
+        <button class="btn-save" (click)="saveLinear()" [disabled]="!linearApiKey.trim()">
+          <i class="fas" [class.fa-check]="linearSaved" [class.fa-save]="!linearSaved"></i>
+          {{ linearSaved ? 'Saved!' : 'Save' }}
+        </button>
+        <button class="btn-disconnect" (click)="disconnectLinear()" [disabled]="!linearConnected">
+          <i class="fas fa-unlink"></i> Disconnect
+        </button>
+      </div>
+    </div>
+
   </div>
 </div>
