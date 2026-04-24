@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { AdoService, AdoSprint } from '../../../services/ado.service';
 import { Subject, takeUntil } from 'rxjs';
@@ -196,6 +196,13 @@ export class SprintCalendarComponent implements OnInit, OnDestroy {
 
   closePopover() {
     this.showPopover = false;
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscapeKey(): void {
+    if (this.showPopover) {
+      this.showPopover = false;
+    }
   }
 
   buildSprintDays() {

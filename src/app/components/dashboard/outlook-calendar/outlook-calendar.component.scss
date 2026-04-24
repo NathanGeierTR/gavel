@@ -491,14 +491,14 @@ $border-color: #e5e7eb;
   &:hover { filter: brightness(1.12); }
 
   &.active {
-    outline: 2px solid var(--saf-color-brand-racing-green-400);
+    outline: 2px solid var(--saf-color-brand-racing-green-100);
     outline-offset: 1px;
     filter: brightness(1.08);
   }
 
-  &.happening-now { background: var(--saf-color-brand-racing-green-400); }
-  &.upcoming      { background: var(--saf-color-brand-racing-green-400); }
-  &.past          { background: var(--saf-color-brand-racing-green-300); opacity: 0.65; }
+  &.happening-now { background: var(--saf-color-brand-racing-green-100); }
+  &.upcoming      { background: var(--saf-color-brand-racing-green-100); }
+  &.past          { background: var(--saf-color-brand-racing-green-100); }
 }
 
 // ─── Timeline Strip ───────────────────────────────────────────────────────────
