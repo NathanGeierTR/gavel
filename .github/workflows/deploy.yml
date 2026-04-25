@@ -29,23 +29,30 @@ jobs:
           node-version: '20'
       
       - name: Configure npm registry
-        run: echo "registry=https://registry.npmjs.org/" > ~/.npmrc
+        run: |
+          echo "registry=https://registry.npmjs.org/" > ~/.npmrc
+          # Also clear system-level configs that might inject auth
+          sudo rm -f /usr/local/etc/npmrc /etc/npmrc 2>/dev/null || true
       
       - name: Debug npm config
         run: |
           echo "--- ~/.npmrc ---"
           cat ~/.npmrc
+          echo "--- /usr/local/etc/npmrc ---"
+          cat /usr/local/etc/npmrc 2>/dev/null || echo "(not found)"
           echo "--- npm config list ---"
           npm config list
-          echo "--- NPM env vars ---"
-          env | grep -i npm || echo "(none)"
+          echo "--- npm config list --json ---"
+          npm config list --json
+          echo "--- NPM/NODE env vars ---"
+          env | grep -iE "^(npm|node)" || echo "(none)"
       
       - name: Install dependencies
         run: npm ci
       
       - name: Show npm debug log
         if: failure()
-        run: cat /home/runner/.npm/_logs/*.log 2>/dev/null | tail -200
+        run: cat /home/runner/.npm/_logs/*.log 2>/dev/null | tail -300
       
       - name: Inject Firebase config
         run: |
