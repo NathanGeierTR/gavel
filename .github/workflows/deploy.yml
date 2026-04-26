@@ -60,6 +60,9 @@ jobs:
           cat > src/environments/environment.ts << 'EOF'
           export const environment = {
               production: true,
+              adoApiBaseUrl: 'https://dev.azure.com',
+              linearApiUrl: 'https://api.linear.app',
+              msalRedirectUri: 'https://NathanGeierTR.github.io/gavel/',
               firebase: {
                   apiKey: '${{ secrets.FIREBASE_API_KEY }}',
                   authDomain: '${{ secrets.FIREBASE_AUTH_DOMAIN }}',
