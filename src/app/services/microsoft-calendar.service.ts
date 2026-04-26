@@ -64,16 +64,29 @@ export class MicrosoftCalendarService {
   private configuredSubject = new BehaviorSubject<boolean>(false);
   public isConfigured$ = this.configuredSubject.asObservable();
 
+  /** Emits the expiry Date when a token is saved, or null when cleared. */
+  private tokenExpirySubject = new BehaviorSubject<Date | null>(null);
+  public tokenExpiry$ = this.tokenExpirySubject.asObservable();
+
   constructor(private http: HttpClient) {
     this.loadConfiguration();
   }
 
-  /**
-   * Initialize with access token
-   */
+  /** Extract the exp claim from a JWT without verifying the signature. */
+  private parseExpiry(token: string): Date | null {
+    try {
+      const payload = token.split('.')[1];
+      const decoded = JSON.parse(atob(payload.replace(/-/g, '+').replace(/_/g, '/')));
+      return decoded.exp ? new Date(decoded.exp * 1000) : null;
+    } catch {
+      return null;
+    }
+  }
+
   initialize(accessToken: string) {
     this.accessToken = accessToken;
     this.configuredSubject.next(true);
+    this.tokenExpirySubject.next(this.parseExpiry(accessToken));
     this.saveConfiguration();
   }
 
@@ -128,9 +141,6 @@ export class MicrosoftCalendarService {
     this.loadingSubject.next(true);
     this.errorSubject.next(null);
 
-    // Build a UTC window that covers the entire local calendar day.
-    // Using setHours(0,0,0,0) gives midnight local time; toISOString() converts
-    // that to UTC — so the window is already correct for any timezone.
     const startOfDay = new Date(date);
     startOfDay.setHours(0, 0, 0, 0);
     const endOfDay = new Date(date);
@@ -149,7 +159,7 @@ export class MicrosoftCalendarService {
     const url = `https://graph.microsoft.com/v1.0/me/calendarview?startDateTime=${startDateTime}&endDateTime=${endDateTime}&$orderby=start/dateTime&$select=id,subject,start,end,location,organizer,attendees,isOnlineMeeting,onlineMeeting,showAs,isAllDay`;
 
     return this.http.get<any>(url, { headers }).pipe(
-      map(response => {
+          map(response => {
         const allEvents = response.value as CalendarEvent[];
         // Filter out all-day events whose start date doesn't match the requested date.
         // Graph returns all-day events spanning into the next day (end = next midnight)
@@ -174,7 +184,7 @@ export class MicrosoftCalendarService {
         console.error('Failed to fetch calendar events:', error);
         if (error.status === 401) {
           this.clearConfiguration();
-          this.errorSubject.next('Token expired or invalid. Please reconnect.');
+          this.errorSubject.next('Token expired. Please paste a new token in Connections → Outlook Calendar.');
         } else if (error.status === 403) {
           this.errorSubject.next('403: Token is missing the Calendars.Read permission. In Graph Explorer, go to Modify Permissions, consent to Calendars.Read, then copy a fresh token.');
         } else {
@@ -189,38 +199,31 @@ export class MicrosoftCalendarService {
   }
 
   /**
-   * Check if service is configured
+   * Check if the user is signed in to Microsoft
    */
   isConfigured(): boolean {
     return this.configuredSubject.value;
   }
 
-  /**
-   * Save configuration to localStorage
-   */
   private saveConfiguration() {
     if (this.accessToken) {
       localStorage.setItem('outlook-calendar-token', this.accessToken);
     }
   }
 
-  /**
-   * Load configuration from localStorage
-   */
   private loadConfiguration() {
     const token = localStorage.getItem('outlook-calendar-token');
     if (token) {
       this.accessToken = token;
       this.configuredSubject.next(true);
+      this.tokenExpirySubject.next(this.parseExpiry(token));
     }
   }
 
-  /**
-   * Clear configuration
-   */
   clearConfiguration() {
     this.accessToken = '';
     this.configuredSubject.next(false);
+    this.tokenExpirySubject.next(null);
     localStorage.removeItem('outlook-calendar-token');
     this.eventsSubject.next([]);
   }

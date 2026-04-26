@@ -40,7 +40,7 @@ export class CoworkerTimezonesComponent implements OnInit, OnDestroy {
   teamsConnected = false;
   showTeamsSetup = false;
   teamsAccessToken = '';
-  
+
   // Store the user's current timezone
   userTimezone = 'America/New_York';
 
@@ -198,14 +198,8 @@ export class CoworkerTimezonesComponent implements OnInit, OnDestroy {
       alert('Email address is required');
       return;
     }
-    
-    if (!this.teamsConnected) {
-      alert('Please connect to Microsoft Teams first to add coworkers by email');
-      return;
-    }
-    
-    // Determine which selection method to use
-    // If city is not the default, prefer city selection
+
+    // Determine timezone/location from form selections
     let timezone: string | undefined;
     let location: string;
     
@@ -220,47 +214,57 @@ export class CoworkerTimezonesComponent implements OnInit, OnDestroy {
       timezone = selectedOffset?.timezone;
       location = selectedOffset?.city || 'Unknown';
     }
-    
-    console.log('Timezone:', timezone);
-    console.log('Location:', location);
-    
-    // Fetch user data from Teams
-    this.teamsService.getUserProfile(email)
-      .subscribe({
-        next: (profile) => {
-          console.log('Found user:', profile);
-          
-          const coworkerData: any = {
-            name: profile.displayName || email,
-            role: profile.jobTitle,
-            location: location,
-            timezone: timezone,
-            email: email
-          };
-          
-          console.log('Adding coworker with data:', coworkerData);
-          
-          this.coworkerService.addCoworker(coworkerData);
-          
-          setTimeout(() => {
-            const coworker = this.coworkers.find(c => c.email === email);
-            if (coworker) {
-              this.fetchUserPhoto(email, coworker.id);
-            }
-          }, 100);
-          
-          this.resetForm();
-          this.showAddForm = false;
-        },
-        error: (error) => {
-          console.error('User lookup failed:', error);
-          if (error.status === 404) {
-            alert('❌ User not found. Please check the email address.');
-          } else {
-            alert(`❌ Error: ${error.error?.error?.message || error.message}`);
+
+    // Try to enrich from Teams profile if signed in. If the scope isn't available
+    // (org requires admin consent for User.ReadBasic.All), addCoworker falls back
+    // to using the form data without enrichment.
+    if (this.teamsConnected) {
+      let resolved = false;
+
+      this.teamsService.getUserProfile(email)
+        .subscribe({
+          next: (profile) => {
+            resolved = true;
+            const coworkerData: any = {
+              name: profile.displayName || this.newCoworker.name || email,
+              role: profile.jobTitle,
+              location: location,
+              timezone: timezone,
+              email: email
+            };
+            this.coworkerService.addCoworker(coworkerData);
+            setTimeout(() => {
+              const coworker = this.coworkers.find(c => c.email === email);
+              if (coworker) { this.fetchUserPhoto(email, coworker.id); }
+            }, 100);
+            this.resetForm();
+            this.showAddForm = false;
+          },
+          error: (error) => {
+            resolved = true;
+            console.warn('Teams profile lookup unavailable:', error);
+            // Fall back to manual form data
+            this.addCoworkerManually(email, timezone, location);
+          },
+          complete: () => {
+            // EMPTY completes without emitting when scope is unavailable
+            if (!resolved) { this.addCoworkerManually(email, timezone, location); }
           }
-        }
-      });
+        });
+    } else {
+      this.addCoworkerManually(email, timezone, location);
+    }
+  }
+
+  private addCoworkerManually(email: string, timezone: string | undefined, location: string): void {
+    const name = this.newCoworker.name.trim() || email;
+    if (!name) {
+      alert('Please enter a name for this coworker.');
+      return;
+    }
+    this.coworkerService.addCoworker({ name, location, timezone: timezone ?? '', email });
+    this.resetForm();
+    this.showAddForm = false;
   }
 
   startEdit(coworker: Coworker): void {
@@ -498,54 +502,6 @@ export class CoworkerTimezonesComponent implements OnInit, OnDestroy {
           });
       }
     });
-  }
-
-  testMyPresence(): void {
-    console.log('Testing my presence...');
-    
-    // Temporarily set the token for testing without saving it
-    const tempToken = this.teamsAccessToken.trim();
-    if (!tempToken) {
-      alert('Please paste an access token first');
-      return;
-    }
-    
-    // Temporarily set the token
-    const originalToken = this.teamsService['accessTokenSubject'].value;
-    this.teamsService['accessTokenSubject'].next(tempToken);
-    
-    this.teamsService.getMyPresence()
-      .subscribe({
-        next: (presence) => {
-          console.log('My presence response:', presence);
-          console.log('Availability:', presence.availability);
-          console.log('Activity:', presence.activity);
-          alert(`✅ Token is valid!\n\nYour presence:\nAvailability: ${presence.availability}\nActivity: ${presence.activity}\n\nYou can now click "Connect" to save it.`);
-          
-          // Restore original token (if any)
-          this.teamsService['accessTokenSubject'].next(originalToken);
-        },
-        error: (error) => {
-          console.error('Full error object:', error);
-          console.error('Error status:', error.status);
-          console.error('Error message:', error.message);
-          console.error('Error response:', error.error);
-          
-          let errorMsg = `❌ Token test failed!\n\nError ${error.status}: `;
-          if (error.error?.error?.message) {
-            errorMsg += error.error.error.message;
-          } else if (error.message) {
-            errorMsg += error.message;
-          } else {
-            errorMsg += 'Unknown error';
-          }
-          
-          alert(errorMsg);
-          
-          // Restore original token (if any)
-          this.teamsService['accessTokenSubject'].next(originalToken);
-        }
-      });
   }
 
   fetchUserDataFromTeams(email: string): void {

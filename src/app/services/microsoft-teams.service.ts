@@ -22,10 +22,10 @@ export interface TeamsUser {
 export class MicrosoftTeamsService {
   private readonly GRAPH_API_URL = 'https://graph.microsoft.com/v1.0';
   private readonly TOKEN_STORAGE_KEY = 'ms-teams-token';
-  
+
   private accessTokenSubject = new BehaviorSubject<string | null>(null);
   accessToken$ = this.accessTokenSubject.asObservable();
-  
+
   private isAuthenticatedSubject = new BehaviorSubject<boolean>(false);
   isAuthenticated$ = this.isAuthenticatedSubject.asObservable();
 
@@ -42,8 +42,6 @@ export class MicrosoftTeamsService {
   }
 
   setAccessToken(token: string): void {
-    console.log('Setting access token, length:', token.length);
-    console.log('Token starts with:', token.substring(0, 20) + '...');
     localStorage.setItem(this.TOKEN_STORAGE_KEY, token);
     this.accessTokenSubject.next(token);
     this.isAuthenticatedSubject.next(true);
@@ -65,15 +63,8 @@ export class MicrosoftTeamsService {
 
   // Get current user's presence
   getMyPresence(): Observable<TeamsPresence> {
-    console.log('Fetching my presence from:', `${this.GRAPH_API_URL}/me/presence`);
-    return this.http.get<any>(
-      `${this.GRAPH_API_URL}/me/presence`,
-      { headers: this.getHeaders() }
-    ).pipe(
-      map(response => {
-        console.log('Raw API response:', response);
-        return response as TeamsPresence;
-      }),
+    return this.http.get<any>(`${this.GRAPH_API_URL}/me/presence`, { headers: this.getHeaders() }).pipe(
+      map(response => response as TeamsPresence),
       catchError(error => {
         console.error('Error fetching presence:', error);
         return throwError(() => error);
@@ -81,17 +72,10 @@ export class MicrosoftTeamsService {
     );
   }
 
-  // Get specific user's presence by email
   getUserPresenceByEmail(email: string): Observable<TeamsPresence> {
-    const encodedEmail = encodeURIComponent(email);
-    const url = `${this.GRAPH_API_URL}/users/${encodedEmail}/presence`;
-    console.log('Fetching presence for:', email, 'URL:', url);
-    
+    const url = `${this.GRAPH_API_URL}/users/${encodeURIComponent(email)}/presence`;
     return this.http.get<any>(url, { headers: this.getHeaders() }).pipe(
-      map(response => {
-        console.log(`Raw API response for ${email}:`, response);
-        return response as TeamsPresence;
-      }),
+      map(response => response as TeamsPresence),
       catchError(error => {
         console.error(`Error fetching user presence for ${email}:`, error);
         return throwError(() => error);
@@ -99,25 +83,13 @@ export class MicrosoftTeamsService {
     );
   }
 
-  // Get multiple users' presence (batch)
   getBatchPresence(userIds: string[]): Observable<Map<string, TeamsPresence>> {
-    const requests = userIds.map(id => ({
-      id: id,
-      method: 'GET',
-      url: `/users/${id}/presence`
-    }));
-
-    return this.http.post<any>(
-      `${this.GRAPH_API_URL}/$batch`,
-      { requests },
-      { headers: this.getHeaders() }
-    ).pipe(
+    const requests = userIds.map(id => ({ id, method: 'GET', url: `/users/${id}/presence` }));
+    return this.http.post<any>(`${this.GRAPH_API_URL}/$batch`, { requests }, { headers: this.getHeaders() }).pipe(
       map(response => {
         const presenceMap = new Map<string, TeamsPresence>();
         response.responses.forEach((res: any) => {
-          if (res.status === 200) {
-            presenceMap.set(res.id, res.body);
-          }
+          if (res.status === 200) { presenceMap.set(res.id, res.body); }
         });
         return presenceMap;
       }),
@@ -128,12 +100,10 @@ export class MicrosoftTeamsService {
     );
   }
 
-  // Search for users by name
   searchUsers(query: string): Observable<TeamsUser[]> {
-    return this.http.get<any>(
-      `${this.GRAPH_API_URL}/users?$filter=startswith(displayName,'${query}') or startswith(mail,'${query}')&$top=10`,
-      { headers: this.getHeaders() }
-    ).pipe(
+    const safeQuery = query.replace(/'/g, "''");
+    const url = `${this.GRAPH_API_URL}/users?$filter=startswith(displayName,'${safeQuery}') or startswith(mail,'${safeQuery}')&$top=10`;
+    return this.http.get<any>(url, { headers: this.getHeaders() }).pipe(
       map(response => response.value),
       catchError(error => {
         console.error('Error searching users:', error);
@@ -142,12 +112,8 @@ export class MicrosoftTeamsService {
     );
   }
 
-  // Get user by email
   getUserByEmail(email: string): Observable<TeamsUser> {
-    return this.http.get<TeamsUser>(
-      `${this.GRAPH_API_URL}/users/${email}`,
-      { headers: this.getHeaders() }
-    ).pipe(
+    return this.http.get<TeamsUser>(`${this.GRAPH_API_URL}/users/${encodeURIComponent(email)}`, { headers: this.getHeaders() }).pipe(
       catchError(error => {
         console.error('Error fetching user:', error);
         return throwError(() => error);
@@ -155,12 +121,9 @@ export class MicrosoftTeamsService {
     );
   }
 
-  // Get user profile with photo
   getUserProfile(email: string): Observable<any> {
-    return this.http.get<any>(
-      `${this.GRAPH_API_URL}/users/${encodeURIComponent(email)}?$select=displayName,mail,jobTitle,officeLocation,userPrincipalName,mobilePhone,businessPhones`,
-      { headers: this.getHeaders() }
-    ).pipe(
+    const url = `${this.GRAPH_API_URL}/users/${encodeURIComponent(email)}?$select=displayName,mail,jobTitle,officeLocation,userPrincipalName,mobilePhone,businessPhones`;
+    return this.http.get<any>(url, { headers: this.getHeaders() }).pipe(
       catchError(error => {
         console.error('Error fetching user profile:', error);
         return throwError(() => error);
@@ -168,15 +131,9 @@ export class MicrosoftTeamsService {
     );
   }
 
-  // Get user profile photo
   getUserPhoto(email: string): Observable<Blob> {
-    return this.http.get(
-      `${this.GRAPH_API_URL}/users/${encodeURIComponent(email)}/photo/$value`,
-      { 
-        headers: this.getHeaders(),
-        responseType: 'blob'
-      }
-    ).pipe(
+    const url = `${this.GRAPH_API_URL}/users/${encodeURIComponent(email)}/photo/$value`;
+    return this.http.get(url, { headers: this.getHeaders(), responseType: 'blob' }).pipe(
       catchError(error => {
         console.error('Error fetching user photo:', error);
         return throwError(() => error);
@@ -184,12 +141,9 @@ export class MicrosoftTeamsService {
     );
   }
 
-  // Get user's mailbox settings (includes timezone)
   getUserMailboxSettings(email: string): Observable<any> {
-    return this.http.get<any>(
-      `${this.GRAPH_API_URL}/users/${encodeURIComponent(email)}/mailboxSettings`,
-      { headers: this.getHeaders() }
-    ).pipe(
+    const url = `${this.GRAPH_API_URL}/users/${encodeURIComponent(email)}/mailboxSettings`;
+    return this.http.get<any>(url, { headers: this.getHeaders() }).pipe(
       catchError(error => {
         console.error('Error fetching mailbox settings:', error);
         return throwError(() => error);

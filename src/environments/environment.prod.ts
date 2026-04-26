@@ -2,6 +2,7 @@ export const environment = {
     production: true,
     adoApiBaseUrl: 'https://dev.azure.com',
     linearApiUrl: 'https://api.linear.app',
+    msalRedirectUri: 'https://NathanGeierTR.github.io/gavel/',
     firebase: {
         apiKey: 'AIzaSyD6-b4k12zbMCwBlZgM3JCgvBJLKq9DBE8',
         authDomain: 'track-board-3c141.firebaseapp.com',

@@ -173,6 +173,47 @@
   gap: 1rem;
 }
 
+.ms-account-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.85rem;
+
+  i { font-size: 1.6rem; color: var(--saf-color-interactive-default, #314b3e); }
+
+  strong { display: block; }
+
+  .muted {
+    font-size: 0.78rem;
+    color: var(--saf-color-text-subtle);
+  }
+}
+
+.token-expiry-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  padding: 6px 10px;
+  border-radius: 6px;
+  margin-bottom: 8px;
+  background: var(--saf-color-background-subtle, #f0fdf4);
+  border: 1px solid var(--saf-color-semantic-success, #16a34a);
+  color: var(--saf-color-semantic-success, #16a34a);
+
+  &.expiry-warning {
+    background: #fffbeb;
+    border-color: #f59e0b;
+    color: #92400e;
+  }
+
+  &.expiry-expired {
+    background: #fef2f2;
+    border-color: #ef4444;
+    color: #991b1b;
+  }
+}
+
 .help-link {
   display: flex;
   flex-direction: column;

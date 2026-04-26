@@ -273,31 +273,28 @@
       </div>
     </div>
   </div>
-
   <!-- Teams Setup Modal -->
   <div class="teams-setup-modal" *ngIf="showTeamsSetup">
     <div class="modal-content">
       <h3>Connect to Microsoft Teams</h3>
       <p>To connect to Microsoft Teams, you'll need an access token from Microsoft Graph API.</p>
-      
+
       <div class="setup-instructions">
         <h4>How to get an access token:</h4>
         <ol>
-          <li>Visit <a href="https://developer.microsoft.com/en-us/graph/graph-explorer" target="_blank">Graph Explorer</a></li>
+          <li>Visit <a href="https://developer.microsoft.com/en-us/graph/graph-explorer" target="_blank" rel="noopener noreferrer">Graph Explorer</a></li>
           <li>Sign in with your Microsoft 365 account</li>
-          <li>Grant permission: "Presence.Read" and "User.Read"</li>
           <li>Enable these permissions:
             <ul>
-              <li><strong>Presence.Read</strong> (for your own presence)</li>
-              <li><strong>Presence.Read.All</strong> (to read others' presence - optional)</li>
-              <li><strong>User.Read.All</strong> (to look up users by email)</li>
-              <li><strong>MailboxSettings.Read</strong> (to auto-detect timezones)</li>
+              <li><strong>Presence.Read.All</strong></li>
+              <li><strong>User.Read.All</strong></li>
+              <li><strong>MailboxSettings.Read</strong></li>
             </ul>
           </li>
           <li>Copy the access token from the request headers</li>
         </ol>
       </div>
-      
+
       <div class="form-group">
         <textarea
           [(ngModel)]="teamsAccessToken"
@@ -306,19 +303,12 @@
           rows="4">
         </textarea>
       </div>
-      
+
       <div class="form-actions">
-        <button 
-          type="button" 
-          class="btn-primary" 
-          (click)="saveTeamsToken()"
-          [disabled]="!teamsAccessToken.trim()">
+        <button type="button" class="btn-primary" (click)="saveTeamsToken()" [disabled]="!teamsAccessToken.trim()">
           Connect
         </button>
-        <button 
-          type="button" 
-          class="btn-secondary" 
-          (click)="showTeamsSetup = false">
+        <button type="button" class="btn-secondary" (click)="showTeamsSetup = false">
           Cancel
         </button>
       </div>

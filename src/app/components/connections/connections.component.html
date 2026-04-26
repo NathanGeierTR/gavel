@@ -148,13 +148,24 @@
       </div>
 
       <div class="card-body">
+        <div *ngIf="calendarConnected && calendarTokenExpiry" class="token-expiry-banner"
+             [class.expiry-warning]="calendarTokenExpiry.getTime() - now() < 15 * 60 * 1000"
+             [class.expiry-expired]="calendarTokenExpiry.getTime() < now()">
+          <i class="fas fa-clock"></i>
+          <span *ngIf="calendarTokenExpiry.getTime() > now()">
+            Token expires at {{ calendarTokenExpiry | date:'h:mm a' }}
+            ({{ minutesUntil(calendarTokenExpiry) }} min remaining)
+          </span>
+          <span *ngIf="calendarTokenExpiry.getTime() <= now()">
+            Token expired — paste a new one below.
+          </span>
+        </div>
         <div class="help-link">
           <a href="https://developer.microsoft.com/en-us/graph/graph-explorer" target="_blank" rel="noopener noreferrer">
             <i class="fas fa-external-link-alt"></i> Microsoft Graph Explorer
           </a>
           <span class="scope-note">Sign in → consent scope: <code>Calendars.Read</code> → copy your access token</span>
         </div>
-
         <div class="form-group">
           <label for="calendar-token">Microsoft Graph Access Token</label>
           <textarea id="calendar-token" [(ngModel)]="calendarToken"
@@ -398,7 +409,6 @@
           </a>
           <span class="scope-note">Sign in → consent scope: <code>Presence.Read.All</code> → copy your access token</span>
         </div>
-
         <div class="form-group">
           <label for="teams-token">Microsoft Graph Access Token</label>
           <textarea id="teams-token" [(ngModel)]="teamsToken"

@@ -106,7 +106,7 @@ export class OutlookCalendarComponent implements OnInit, OnDestroy {
 
   saveConfiguration() {
     if (this.accessToken.trim()) {
-      this.calendarService.initialize(this.accessToken);
+      this.calendarService.initialize(this.accessToken.trim());
       this.isConfigured = true;
       this.showConfig = false;
       this.loadEvents();

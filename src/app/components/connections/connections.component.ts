@@ -29,6 +29,7 @@ export class ConnectionsComponent implements OnInit, OnDestroy {
   calendarToken = '';
   calendarConnected = false;
   calendarSaved = false;
+  calendarTokenExpiry: Date | null = null;
 
   // Microsoft Teams
   teamsToken = '';
@@ -97,6 +98,9 @@ export class ConnectionsComponent implements OnInit, OnDestroy {
     // Outlook Calendar
     this.calendarToken = localStorage.getItem('outlook-calendar-token') || '';
     this.calendarConnected = !!this.calendarToken;
+    this.calendarService.tokenExpiry$.pipe(takeUntil(this.destroy$)).subscribe(exp => {
+      this.calendarTokenExpiry = exp;
+    });
 
     // Microsoft Teams
     this.teamsToken = localStorage.getItem('ms-teams-token') || '';
@@ -162,6 +166,10 @@ export class ConnectionsComponent implements OnInit, OnDestroy {
     }
   }
 
+  // Token expiry helpers used by the template
+  now(): number { return Date.now(); }
+  minutesUntil(expiry: Date): number { return Math.max(0, Math.round((expiry.getTime() - Date.now()) / 60000)); }
+
   // Outlook Calendar
   saveCalendar(): void {
     const token = this.calendarToken.trim();
@@ -176,6 +184,7 @@ export class ConnectionsComponent implements OnInit, OnDestroy {
     this.calendarService.clearConfiguration();
     this.calendarToken = '';
     this.calendarConnected = false;
+    this.calendarTokenExpiry = null;
   }
 
   // Microsoft Teams
