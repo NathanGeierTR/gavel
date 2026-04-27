@@ -81,41 +81,10 @@
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
 
-  &:first-child:hover {
-    // Tooltip (pointer/mouse devices only)
-    @media (hover: hover) {
-      &::after {
-        left: calc(100% + 10px);
-        top: 140%;
-      }
-    }
-  }
-
   &:hover {
     background-color: var(--saf-color-white);
     box-shadow: rgba(0, 0, 0, 0.1) 0px 2px 3px;
     color: var(--saf-color-brand-racing-green-600);
-
-    // Tooltip (pointer/mouse devices only)
-    @media (hover: hover) {
-      &::after {
-        content: attr(data-label);
-        position: absolute;
-        left: calc(100% + 10px);
-        top: 50%;
-        transform: translateY(-50%);
-        background: var(--saf-color-gray-700, #333);
-        color: #fff;
-        font-size: 0.78rem;
-        font-weight: 600;
-        white-space: nowrap;
-        padding: 5px 10px;
-        border-radius: 6px;
-        pointer-events: none;
-        z-index: 300;
-        font-family: "Arimo", sans-serif;
-      }
-    }
   }
 
   &.active {
@@ -375,23 +344,6 @@
     height: 38px;
     font-size: 0.95rem;
     border-radius: 10px;
-  }
-
-  // Reposition hover tooltips for the horizontal bar
-  @media (hover: hover) {
-    .sidenav-items .sidenav-btn:hover::after {
-      left: 0;
-      right: auto;
-      top: calc(100% + 6px);
-      transform: none;
-    }
-
-    .sidenav-bottom .sidenav-btn:hover::after {
-      right: 0;
-      left: auto;
-      top: calc(100% + 6px);
-      transform: none;
-    }
   }
 
   // No left margin needed; page-body gets top padding to clear the nav bar

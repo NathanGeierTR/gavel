@@ -51,7 +51,8 @@
             type="button"
             class="msg-copy-btn"
             (click)="copyMessage(msg.content, i)"
-            [attr.data-label]="copiedMsgIndex === i ? 'Copied!' : 'Copy'"
+            [appTouchTooltip]="copiedMsgIndex === i ? 'Copied!' : 'Copy'"
+            tooltipAlign="bottom-right"
             [attr.aria-label]="copiedMsgIndex === i ? 'Copied!' : 'Copy message'">
             <i class="fas" [class.fa-check]="copiedMsgIndex === i" [class.fa-copy]="copiedMsgIndex !== i"></i>
           </button>
@@ -65,8 +66,8 @@
           class="toolbar-clear-btn"
           (click)="confirmClear = true"
           [disabled]="loading || anySkillLoading"
-          touchTooltipAlign="left"
-          data-label="Clear conversation"
+          [appTouchTooltip]="'Clear conversation'"
+          tooltipAlign="top"
           aria-label="Clear conversation">
           <i class="fas fa-broom"></i>
         </button>
@@ -113,9 +114,9 @@
     <div class="card-toolbar">
       <div class="toolbar-left">
         <button type="button" class="toolbar-icon-btn"
-          data-label="Context: journal, tasks, goals & calendar"
           [appTouchTooltip]="'Context: journal, tasks, goals & calendar'"
-          touchTooltipAlign="bottom-right"
+          tooltipAlign="top-right"
+          tooltipAlignMd="top"
           aria-label="Context: journal, tasks, goals and calendar included">
           <i class="fas fa-database"></i>
         </button>

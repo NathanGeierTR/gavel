@@ -106,25 +106,6 @@
   font-size: 0.85rem;
   border-radius: 6px;
   line-height: 1;
-
-  @media (hover: hover) {
-    &:hover::after {
-      content: attr(data-label);
-      position: absolute;
-      top: calc(100% + 8px);
-      left: 0;
-      background: var(--saf-color-gray-700, #333);
-      color: #fff;
-      font-size: 0.78rem;
-      font-weight: 600;
-      white-space: nowrap;
-      padding: 5px 10px;
-      border-radius: 6px;
-      pointer-events: none;
-      z-index: 300;
-      font-family: "Arimo", sans-serif;
-    }
-  }
 }
 
 .toolbar-divider {
@@ -291,26 +272,6 @@
   &:disabled {
     opacity: 0.4;
     cursor: not-allowed;
-  }
-
-  @media (hover: hover) {
-    &:hover::after {
-      content: attr(data-label);
-      position: absolute;
-      bottom: calc(100% + 8px);
-      left: 50%;
-      transform: translateX(-50%);
-      background: var(--saf-color-gray-700, #333);
-      color: #fff;
-      font-size: 0.78rem;
-      font-weight: 600;
-      white-space: nowrap;
-      padding: 5px 10px;
-      border-radius: 6px;
-      pointer-events: none;
-      z-index: 300;
-      font-family: "Arimo", sans-serif;
-    }
   }
 }
 
@@ -514,26 +475,6 @@
       background: #243829;
       transform: scale(1.06);
     }
-
-    @media (hover: hover) {
-      &:hover::after {
-        content: attr(data-label);
-        position: absolute;
-        top: 50%;
-        right: calc(100% + 6px);
-        transform: translateY(-50%);
-        background: var(--saf-color-gray-700, #333);
-        color: #fff;
-        font-size: 0.78rem;
-        font-weight: 600;
-        white-space: nowrap;
-        padding: 5px 10px;
-        border-radius: 6px;
-        pointer-events: none;
-        z-index: 300;
-        font-family: "Arimo", sans-serif;
-      }
-    }
   }
 
   .msg-copy-btn {
@@ -556,26 +497,6 @@
 
     &:hover {
       transform: scale(1.06);
-    }
-
-    @media (hover: hover) {
-      &:hover::after {
-        content: attr(data-label);
-        position: absolute;
-        top: 50%;
-        right: calc(100% + 6px);
-        transform: translateY(-50%);
-        background: var(--saf-color-gray-700, #333);
-        color: #fff;
-        font-size: 0.78rem;
-        font-weight: 600;
-        white-space: nowrap;
-        padding: 5px 10px;
-        border-radius: 6px;
-        pointer-events: none;
-        z-index: 300;
-        font-family: "Arimo", sans-serif;
-      }
     }
   }
 

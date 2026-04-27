@@ -1,12 +1,12 @@
 import { Injectable, OnDestroy } from '@angular/core';
 
-export type TouchTooltipAlign = 'above' | 'bottom-right' | 'bottom-left';
+export type TooltipAlign = 'top' | 'top-right' | 'right' | 'bottom-right' | 'bottom' | 'bottom-left' | 'left' | 'top-left';
 
 @Injectable({ providedIn: 'root' })
 export class TouchTooltipService implements OnDestroy {
   private el: HTMLSpanElement | null = null;
-  private longPressTimer: ReturnType<typeof setTimeout> | null = null;
-  private hideTimer: ReturnType<typeof setTimeout> | null = null;
+  private dismissHandler: (() => void) | null = null;
+  private scheduleTimer: ReturnType<typeof setTimeout> | null = null;
 
   private ensure(): void {
     if (this.el) return;
@@ -17,62 +17,89 @@ export class TouchTooltipService implements OnDestroy {
     this.el = span;
   }
 
-  startPress(event: TouchEvent, label: string, align: TouchTooltipAlign = 'above'): void {
-    // Cancel any pending show or auto-hide from a previous press
-    if (this.longPressTimer !== null) { clearTimeout(this.longPressTimer); this.longPressTimer = null; }
-    if (this.hideTimer !== null) { clearTimeout(this.hideTimer); this.hideTimer = null; }
-    this.hide();
-
-    const touch = event.touches[0];
-    this.longPressTimer = setTimeout(() => {
-      this.longPressTimer = null;
-      this.show(touch.clientX, touch.clientY, label, align);
-      // Auto-hide after 1.5 s so the user can read it
-      this.hideTimer = setTimeout(() => this.hide(), 1500);
-    }, 400);
+  /** Show on tap — defers the dismiss listener so the current touchend doesn't immediately dismiss. */
+  showOnTap(rect: DOMRect, label: string, align: TooltipAlign = 'top'): void {
+    this.clearDismissListener();
+    this.showForElement(rect, label, align);
+    this.scheduleTimer = setTimeout(() => {
+      this.scheduleTimer = null;
+      this.dismissHandler = () => this.hide();
+      document.addEventListener('touchstart', this.dismissHandler, { once: true, capture: true });
+    }, 0);
   }
 
-  /** Called on touchend/touchcancel — only cancels a pending show; does NOT hide a visible tooltip. */
-  cancelPress(): void {
-    if (this.longPressTimer !== null) {
-      clearTimeout(this.longPressTimer);
-      this.longPressTimer = null;
-    }
-    // Leave a visible tooltip in place — the auto-hide timer will dismiss it.
-  }
-
-  private show(x: number, y: number, label: string, align: TouchTooltipAlign): void {
+  showForElement(rect: DOMRect, label: string, align: TooltipAlign = 'top'): void {
     this.ensure();
     const el = this.el!;
     el.textContent = label;
     el.style.display = '';
+    el.style.transform = '';
 
-    let left = x;
-    let top = y;
-    let transform = 'translateX(-50%)';
+    const sx = window.scrollX;
+    const sy = window.scrollY;
+    const gap = 6;
+    const cx = rect.left + sx + rect.width / 2;
+    const cy = rect.top + sy + rect.height / 2;
 
-    if (align === 'bottom-right') {
-      transform = 'none';
-      top = y + 20;
-    } else if (align === 'bottom-left') {
-      transform = 'translateX(-100%)';
-      top = y + 20;
-    } else {
-      top = y - 44;
+    switch (align) {
+      case 'top':
+        el.style.left = `${cx}px`;
+        el.style.top = `${rect.top + sy - gap}px`;
+        el.style.transform = 'translate(-50%, -100%)';
+        break;
+      case 'top-right':
+        el.style.left = `${rect.right + sx}px`;
+        el.style.top = `${rect.top + sy - gap}px`;
+        el.style.transform = 'translateY(-100%)';
+        break;
+      case 'right':
+        el.style.left = `${rect.right + sx + gap}px`;
+        el.style.top = `${cy}px`;
+        el.style.transform = 'translateY(-50%)';
+        break;
+      case 'bottom-right':
+        el.style.left = `${rect.right + sx}px`;
+        el.style.top = `${rect.bottom + sy + gap}px`;
+        el.style.transform = 'none';
+        break;
+      case 'bottom':
+        el.style.left = `${cx}px`;
+        el.style.top = `${rect.bottom + sy + gap}px`;
+        el.style.transform = 'translateX(-50%)';
+        break;
+      case 'bottom-left':
+        el.style.left = `${rect.left + sx}px`;
+        el.style.top = `${rect.bottom + sy + gap}px`;
+        el.style.transform = 'translateX(-100%)';
+        break;
+      case 'left':
+        el.style.left = `${rect.left + sx - gap}px`;
+        el.style.top = `${cy}px`;
+        el.style.transform = 'translate(-100%, -50%)';
+        break;
+      case 'top-left':
+        el.style.left = `${rect.left + sx}px`;
+        el.style.top = `${rect.top + sy - gap}px`;
+        el.style.transform = 'translate(-100%, -100%)';
+        break;
     }
+  }
 
-    el.style.left = `${left}px`;
-    el.style.top = `${top}px`;
-    el.style.transform = transform;
+  private clearDismissListener(): void {
+    if (this.scheduleTimer !== null) { clearTimeout(this.scheduleTimer); this.scheduleTimer = null; }
+    if (this.dismissHandler) {
+      document.removeEventListener('touchstart', this.dismissHandler, { capture: true });
+      this.dismissHandler = null;
+    }
   }
 
   hide(): void {
+    this.clearDismissListener();
     if (this.el) this.el.style.display = 'none';
   }
 
   ngOnDestroy(): void {
+    this.clearDismissListener();
     this.el?.remove();
-    if (this.longPressTimer !== null) clearTimeout(this.longPressTimer);
-    if (this.hideTimer !== null) clearTimeout(this.hideTimer);
   }
 }

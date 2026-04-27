@@ -329,8 +329,10 @@ button {
   background: var(--saf-color-gray-700, #333);
   color: #fff;
   font-size: 0.78rem;
-  font-weight: 600;
-  white-space: nowrap;
+  font-weight: 500;
+  width: max-content;
+  max-width: 200px;
+  white-space: normal;
   padding: 5px 10px;
   border-radius: 6px;
   pointer-events: none;

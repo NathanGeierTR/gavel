@@ -2,16 +2,16 @@
   <!-- Task Overview -->
   <div class="task-overview">
     <div class="overview-header">
-      <h3>My Tasks</h3>
+      <h3>My Notes</h3>
       <button class="btn-add-task" (click)="toggleNewTaskForm()">
-        {{ showNewTaskForm ? '✕ Cancel' : '+ New Task' }}
+        {{ showNewTaskForm ? '✕ Cancel' : '+ New Note' }}
       </button>
     </div>
   </div>
 
   <!-- New Task Form -->
   <div class="new-task-form" *ngIf="showNewTaskForm">
-    <h4>Create New Task</h4>
+    <h4>New Note</h4>
     <form (ngSubmit)="addTask()">
       <div class="form-group">
         <label for="taskTitle">Title *</label>
@@ -125,7 +125,7 @@
       
       <!-- Edit Mode -->
       <div class="edit-task-form" *ngIf="isEditing(task.id)">
-        <h4>Edit Task</h4>
+        <h4>Edit Note</h4>
         <form (ngSubmit)="saveTaskEdit()">
           <div class="form-group">
             <label [for]="'editTitle-' + task.id">Title *</label>
@@ -244,7 +244,7 @@
             <h5 class="task-title" [class.completed]="task.completed">{{ task.title }}</h5>
             <div class="task-meta" *ngIf="task.dueDate">
               <span class="due-date" [class.overdue]="isOverdue(task)">
-                📅 {{ formatDate(task.dueDate) }}
+                <i class="fas fa-calendar-alt"></i> {{ formatDate(task.dueDate) }}
                 <span *ngIf="!task.completed && task.dueDate" class="days-until">
                   ({{ getDaysUntilDue(task) > 0 ? getDaysUntilDue(task) + ' days' : 'Today' }})
                 </span>
@@ -260,10 +260,10 @@
             </span>
             <i class="fas fa-redo recurring-icon" *ngIf="task.recurring" [title]="getRecurringLabel(task)"></i>
             <button class="btn-edit" (click)="startEditTask(task)" title="Edit task">
-              ✏️
+              <i class="fas fa-pencil-alt"></i>
             </button>
             <button class="btn-delete" (click)="deleteTask(task.id)" title="Delete task">
-              🗑️
+              <i class="fas fa-trash-alt"></i>
             </button>
           </div>
         </div>
@@ -302,9 +302,9 @@
 
     <!-- Empty State -->
     <div *ngIf="filteredTasks.length === 0" class="empty-state">
-      <div class="empty-icon">📋</div>
-      <h4>No tasks found</h4>
-      <p>Try adjusting your filters or check back later for new tasks.</p>
+      <div class="empty-icon">�</div>
+      <h4>No notes yet</h4>
+      <p>Add your first note above — a task, reminder, or anything work-related.</p>
     </div>
   </div>
 </div>

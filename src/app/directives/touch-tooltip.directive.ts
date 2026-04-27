@@ -1,5 +1,5 @@
-import { Directive, Input, HostListener, OnDestroy } from '@angular/core';
-import { TouchTooltipAlign, TouchTooltipService } from '../services/touch-tooltip.service';
+import { Directive, Input, HostListener, OnDestroy, ElementRef } from '@angular/core';
+import { TooltipAlign, TouchTooltipService } from '../services/touch-tooltip.service';
 
 @Directive({
   selector: '[appTouchTooltip]',
@@ -7,24 +7,53 @@ import { TouchTooltipAlign, TouchTooltipService } from '../services/touch-toolti
 })
 export class TouchTooltipDirective implements OnDestroy {
   @Input('appTouchTooltip') label = '';
-  @Input() touchTooltipAlign: TouchTooltipAlign = 'above';
+  /** Default alignment (mobile-first: applies at all sizes unless overridden). */
+  @Input() tooltipAlign: TooltipAlign = 'top';
+  /** Override at ≥576px */
+  @Input() tooltipAlignSm?: TooltipAlign;
+  /** Override at ≥768px */
+  @Input() tooltipAlignMd?: TooltipAlign;
+  /** Override at ≥992px */
+  @Input() tooltipAlignLg?: TooltipAlign;
+  /** Override at ≥1200px */
+  @Input() tooltipAlignXl?: TooltipAlign;
 
-  constructor(private service: TouchTooltipService) {}
+  constructor(private service: TouchTooltipService, private el: ElementRef<HTMLElement>) {}
 
-  @HostListener('touchstart', ['$event'])
-  onTouchStart(event: TouchEvent): void {
+  private getRect(): DOMRect {
+    return this.el.nativeElement.getBoundingClientRect();
+  }
+
+  private resolveAlign(): TooltipAlign {
+    const w = window.innerWidth;
+    if (w >= 1200 && this.tooltipAlignXl) return this.tooltipAlignXl;
+    if (w >= 992  && this.tooltipAlignLg) return this.tooltipAlignLg;
+    if (w >= 768  && this.tooltipAlignMd) return this.tooltipAlignMd;
+    if (w >= 576  && this.tooltipAlignSm) return this.tooltipAlignSm;
+    return this.tooltipAlign;
+  }
+
+  @HostListener('touchend', ['$event'])
+  onTouchEnd(event: TouchEvent): void {
     if (this.label) {
-      this.service.startPress(event, this.label, this.touchTooltipAlign);
+      event.preventDefault();
+      this.service.showOnTap(this.getRect(), this.label, this.resolveAlign());
     }
   }
 
-  @HostListener('touchend')
-  @HostListener('touchcancel')
-  onTouchEnd(): void {
-    this.service.cancelPress();
+  @HostListener('mouseenter')
+  onMouseEnter(): void {
+    if (this.label) {
+      this.service.showForElement(this.getRect(), this.label, this.resolveAlign());
+    }
+  }
+
+  @HostListener('mouseleave')
+  onMouseLeave(): void {
+    this.service.hide();
   }
 
   ngOnDestroy(): void {
-    this.service.cancelPress();
+    this.service.hide();
   }
 }

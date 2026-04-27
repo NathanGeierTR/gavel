@@ -4,13 +4,14 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { marked } from 'marked';
 import { LinearService, LinearIssue } from '../../../services/linear.service';
 import { NavigationService } from '../../../services/navigation.service';
+import { TouchTooltipDirective } from '../../../directives/touch-tooltip.directive';
 import { Subject, interval } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'app-linear-work-items',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TouchTooltipDirective],
   templateUrl: './linear-work-items.component.html',
   styleUrl: './linear-work-items.component.scss'
 })
@@ -119,6 +120,28 @@ export class LinearWorkItemsComponent implements OnInit, OnDestroy {
     return this.expandedIssues.has(id);
   }
 
+  private readonly stateOrder: Record<string, number> = {
+    backlog: 0,
+    todo: 1,
+    'in progress': 2,
+    'in review': 3,
+    'in testing': 4,
+    done: 5,
+    cancelled: 6,
+    duplicate: 7,
+    triage: 8,
+  };
+
+  get sortedIssues(): LinearIssue[] {
+    return [...this.issues].sort((a, b) => {
+      const nameA = a.state.name.toLowerCase();
+      const nameB = b.state.name.toLowerCase();
+      const rankA = Object.entries(this.stateOrder).find(([k]) => nameA.includes(k))?.[1] ?? 99;
+      const rankB = Object.entries(this.stateOrder).find(([k]) => nameB.includes(k))?.[1] ?? 99;
+      return rankA - rankB;
+    });
+  }
+
   openIssue(url: string): void {
     window.open(url, '_blank', 'noopener,noreferrer');
   }
@@ -169,12 +192,26 @@ export class LinearWorkItemsComponent implements OnInit, OnDestroy {
 
   getStateIcon(type: string, name: string): string | null {
     if (type === 'completed') return 'fa-circle-check';
-    if (name.toLowerCase().includes('review')) return 'fa-circle-half-stroke';
+    if (name.toLowerCase().includes('backlog')) return 'fa-bars-staggered';
+    if (name.toLowerCase().includes('todo')) return 'fa-circle';
+    if (name.toLowerCase().includes('progress')) return 'fa-person-running';
+    if (name.toLowerCase().includes('review')) return 'fa-glasses';
+    if (name.toLowerCase().includes('testing')) return 'fa-vial';
+    if (name.toLowerCase().includes('canceled')) return 'fa-circle-xmark';
+    if (name.toLowerCase().includes('duplicate')) return 'fa-circle-xmark';
+    if (name.toLowerCase().includes('triage')) return 'fa-arrows-left-right';
     return null;
   }
 
   getStateIconColor(type: string, name: string, fallback: string): string {
+    if (name.toLowerCase().includes('backlog')) return '#a8a8a8';
+    if (name.toLowerCase().includes('todo')) return '#a8a8a8';
+    if (name.toLowerCase().includes('progress')) return '#f0bf00';
     if (name.toLowerCase().includes('review')) return '#43bc58';
+    if (name.toLowerCase().includes('testing')) return '#4cb782';
+    if (name.toLowerCase().includes('canceled')) return '#95a2b3';
+    if (name.toLowerCase().includes('duplicate')) return '#95a2b3';
+    if (name.toLowerCase().includes('triage')) return '#ff7336';
     return fallback;
   }
 }

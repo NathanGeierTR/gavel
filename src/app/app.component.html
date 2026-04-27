@@ -20,37 +20,37 @@
       <div class="sidenav-items">
         <button class="sidenav-btn" [class.active]="currentView === 'dashboard'"
                 (click)="navigateTo('dashboard')" data-label="Dashboard" aria-label="Dashboard"
-                [appTouchTooltip]="'Dashboard'" touchTooltipAlign="bottom-right">
+                [appTouchTooltip]="'Dashboard'" tooltipAlign="bottom-right">
           <i class="fas fa-house"></i>
         </button>
 
         <button class="sidenav-btn" [class.active]="currentView === 'connections'"
                 (click)="navigateTo('connections')" data-label="Connections" aria-label="Connections"
-                [appTouchTooltip]="'Connections'" touchTooltipAlign="bottom-right">
+                [appTouchTooltip]="'Connections'" tooltipAlign="bottom-right" tooltipAlignMd="right">
           <i class="fas fa-plug"></i>
         </button>
 
         <button class="sidenav-btn" [class.active]="currentView === 'journal'"
                 (click)="navigateTo('journal')" data-label="Journal" aria-label="Journal"
-                [appTouchTooltip]="'Journal'" touchTooltipAlign="bottom-right">
+                [appTouchTooltip]="'Journal'" tooltipAlign="bottom-right" tooltipAlignMd="right">
           <i class="fas fa-book-open"></i>
         </button>
 
         <button class="sidenav-btn" [class.active]="currentView === 'goals'"
                 (click)="navigateTo('goals')" data-label="Yearly Goals" aria-label="Yearly Goals"
-                [appTouchTooltip]="'Yearly Goals'" touchTooltipAlign="bottom-right">
+                [appTouchTooltip]="'Yearly Goals'" tooltipAlign="bottom-right" tooltipAlignMd="right">
           <i class="fas fa-bullseye"></i>
         </button>
 
         <button class="sidenav-btn" [class.active]="currentView === 'tasks'"
-                (click)="navigateTo('tasks')" data-label="Tasks" aria-label="Tasks"
-                [appTouchTooltip]="'Tasks'" touchTooltipAlign="bottom-right">
-          <i class="fas fa-check-square"></i>
+                (click)="navigateTo('tasks')" data-label="Notes" aria-label="Notes"
+                [appTouchTooltip]="'Notes'" tooltipAlign="bottom-right" tooltipAlignMd="right">
+          <i class="fas fa-sticky-note"></i>
         </button>
 
         <button class="sidenav-btn" [class.active]="currentView === 'open-arena-chat'"
                 (click)="navigateTo('open-arena-chat')" data-label="Open Arena Chat" aria-label="Open Arena Chat"
-                [appTouchTooltip]="'Open Arena Chat'" touchTooltipAlign="bottom-right">
+                [appTouchTooltip]="'Open Arena Chat'" tooltipAlign="bottom-right" tooltipAlignMd="right">
           <i class="fas fa-robot"></i>
         </button>
       </div>
@@ -61,11 +61,10 @@
                 [class.ai-connected]="isAIServiceValid && !isRateLimitExceeded"
                 [class.ai-exceeded]="isAIServiceValid && isRateLimitExceeded"
                 [class.ai-disconnected]="!isAIConnected || hasTokenError"
-                (click)="navigateTo('connections')"
                 [attr.aria-label]="isAIServiceValid ? 'GitHub AI: ' + (rateLimit?.callsUsed ?? 0) + ' calls used' : 'GitHub AI not configured'"
                 [attr.data-label]="isAIServiceValid ? 'AI: ' + (rateLimit?.callsUsed ?? 0) + ' calls' : 'GitHub AI not configured'"
                 [appTouchTooltip]="isAIServiceValid ? 'AI: ' + (rateLimit?.callsUsed ?? 0) + ' calls' : 'GitHub AI not configured'"
-                touchTooltipAlign="bottom-left">
+                tooltipAlign="bottom-left" tooltipAlignMd="right">
           <i class="fab fa-github"></i>
           <span class="ai-dot"
                 [class.connected]="isAIServiceValid && !isRateLimitExceeded"
@@ -74,7 +73,7 @@
         </button>
 
         <button class="sidenav-btn" (click)="logout()" data-label="Sign Out" aria-label="Sign Out"
-                [appTouchTooltip]="'Sign Out'" touchTooltipAlign="bottom-left">
+                [appTouchTooltip]="'Sign Out'" tooltipAlign="bottom-left" tooltipAlignMd="right">
           <i class="fas fa-sign-out-alt"></i>
         </button>
       </div>

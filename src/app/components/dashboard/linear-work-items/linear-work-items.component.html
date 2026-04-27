@@ -86,7 +86,7 @@
   <!-- ── Issue list ─────────────────────────────────────────── -->
   <div class="issue-list" *ngIf="isConfigured && issues.length > 0 && !itemsHidden">
     <div
-      *ngFor="let issue of issues"
+      *ngFor="let issue of sortedIssues"
       class="issue-item"
       [class.is-overdue]="isOverdue(issue)"
       [class.expanded]="isIssueExpanded(issue.id)">
@@ -106,14 +106,17 @@
         <ng-container *ngIf="getStateIcon(issue.state.type, issue.state.name) as icon; else dotTpl">
           <i class="fas {{ icon }} state-icon {{ getStateClass(issue.state.type) }}"
              [style.color]="getStateIconColor(issue.state.type, issue.state.name, issue.state.color)"
-             [title]="issue.state.name"
+             [appTouchTooltip]="issue.state.name"
+             tooltipAlign="top-right"
+             tooltipAlignMd="top"
              aria-hidden="true"></i>
         </ng-container>
         <ng-template #dotTpl>
           <span
             class="state-dot {{ getStateClass(issue.state.type) }}"
             [style.background-color]="issue.state.color"
-            [title]="issue.state.name">
+            [appTouchTooltip]="issue.state.name"
+            tooltipAlign="top">
           </span>
         </ng-template>
 
