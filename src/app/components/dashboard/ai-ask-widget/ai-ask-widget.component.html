@@ -117,7 +117,13 @@
             <span class="branch-issue-state">{{ issue.state.name }}</span>
           </button>
         </div>
-        <button type="button" class="msg-copy-btn" (click)="cancelBranchPicker()" aria-label="Cancel" [appTouchTooltip]="'Cancel'" tooltipAlign="left">
+        <button 
+          type="button" 
+          class="msg-copy-btn" 
+          (click)="cancelBranchPicker()" 
+          aria-label="Cancel"
+          [appTouchTooltip]="'Cancel'"
+          tooltipAlign="left">
           <i class="fas fa-times"></i>
         </button>
       </div>
@@ -142,7 +148,9 @@
 
     <div class="card-toolbar">
       <div class="toolbar-left">
-        <button type="button" class="toolbar-icon-btn"
+        <button 
+          type="button" 
+          class="toolbar-icon-btn"
           [appTouchTooltip]="'Context: journal, tasks, goals & calendar'"
           tooltipAlign="top-right"
           tooltipAlignMd="top"

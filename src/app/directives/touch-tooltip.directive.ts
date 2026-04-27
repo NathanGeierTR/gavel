@@ -36,7 +36,6 @@ export class TouchTooltipDirective implements OnDestroy {
   @HostListener('touchend', ['$event'])
   onTouchEnd(event: TouchEvent): void {
     if (this.label) {
-      event.preventDefault();
       this.service.showOnTap(this.getRect(), this.label, this.resolveAlign());
     }
   }
