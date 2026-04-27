@@ -9,6 +9,7 @@ import { GoalsService, Goal } from '../../../services/goals.service';
 import { AdoService } from '../../../services/ado.service';
 import { CoworkerService } from '../../../services/coworker.service';
 import { MicrosoftCalendarService, CalendarEvent } from '../../../services/microsoft-calendar.service';
+import { LinearService, LinearIssue } from '../../../services/linear.service';
 import { Subject, combineLatest } from 'rxjs';
 import { takeUntil, debounceTime } from 'rxjs/operators';
 import { TouchTooltipDirective } from '../../../directives/touch-tooltip.directive';
@@ -50,6 +51,7 @@ export class AiAskWidgetComponent implements OnInit, OnDestroy, AfterViewChecked
   confirmClear = false;
   private shouldScroll = false;
   showSkillsDropdown = false;
+  skillsDropdownUp = false;
 
   // Tracks assistant messages currently playing the reveal animation
   animatingMessages = new Set<ChatMessage>();
@@ -68,7 +70,13 @@ export class AiAskWidgetComponent implements OnInit, OnDestroy, AfterViewChecked
     { id: 'daily-summary', label: 'Daily Summary',  icon: 'fas fa-wand-sparkles', description: 'Motivational overview + top priorities for today', loading: false },
     { id: 'scrum-update',  label: 'Scrum Update',   icon: 'fas fa-users',          description: 'Standup update drafted from journal entries',   loading: false },
     { id: 'sprint-retro',  label: 'Sprint Retro',   icon: 'fas fa-chart-bar',      description: 'Retro board suggestions based on your sprint activity', loading: false },
+    { id: 'branch-name',   label: 'Branch Name',    icon: 'fas fa-code-branch',    description: 'Generate a git branch name from a Linear issue', loading: false },
   ];
+
+  // Branch name skill state
+  showBranchPicker = false;
+  branchIssues: LinearIssue[] = [];
+  private linearIssues: LinearIssue[] = [];
 
   // Live data
   private journalEntries: JournalEntry[] = [];
@@ -86,7 +94,8 @@ export class AiAskWidgetComponent implements OnInit, OnDestroy, AfterViewChecked
     private goalsService: GoalsService,
     private calendarService: MicrosoftCalendarService,
     private adoService: AdoService,
-    private coworkerService: CoworkerService
+    private coworkerService: CoworkerService,
+    private linearService: LinearService
   ) {}
 
   get greeting(): string {
@@ -126,6 +135,12 @@ export class AiAskWidgetComponent implements OnInit, OnDestroy, AfterViewChecked
       .pipe(takeUntil(this.destroy$))
       .subscribe(configured => {
         if (configured) this.fetchCalendarRange();
+      });
+
+    this.linearService.issues$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(issues => {
+        this.linearIssues = issues;
       });
 
     this.aiService.error$
@@ -198,6 +213,15 @@ export class AiAskWidgetComponent implements OnInit, OnDestroy, AfterViewChecked
   runSkill(skillId: string): void {
     if (this.loading || this.anySkillLoading) return;
 
+    if (skillId === 'branch-name') {
+      const activeStates = ['backlog', 'unstarted', 'started'];
+      this.branchIssues = this.linearIssues.filter(i => activeStates.includes(i.state.type));
+      this.showBranchPicker = true;
+      this.showSkillsDropdown = false;
+      this.shouldScroll = true;
+      return;
+    }
+
     const skill = this.skills.find(s => s.id === skillId);
     if (!skill) return;
 
@@ -215,6 +239,19 @@ export class AiAskWidgetComponent implements OnInit, OnDestroy, AfterViewChecked
     skill.loading = true;
     this.error = null;
     this.sendMessage(prompt, skill);
+  }
+
+  toggleSkillsDropdown(): void {
+    if (this.showSkillsDropdown) {
+      this.showSkillsDropdown = false;
+      return;
+    }
+    if (this.skillsDropdownWrapper) {
+      const rect = this.skillsDropdownWrapper.nativeElement.getBoundingClientRect();
+      const estimatedHeight = 260; // approx dropdown height in px
+      this.skillsDropdownUp = rect.bottom + estimatedHeight > window.innerHeight;
+    }
+    this.showSkillsDropdown = true;
   }
 
   get anySkillLoading(): boolean {
@@ -407,6 +444,42 @@ export class AiAskWidgetComponent implements OnInit, OnDestroy, AfterViewChecked
     }
 
     return lines.join('\n');
+  }
+
+  pickBranchIssue(issue: LinearIssue): void {
+    this.showBranchPicker = false;
+    const skill = this.skills.find(s => s.id === 'branch-name')!;
+    skill.loading = true;
+    this.error = null;
+    this.sendMessage(this.buildBranchNamePrompt(issue), skill);
+  }
+
+  cancelBranchPicker(): void {
+    this.showBranchPicker = false;
+    this.shouldScroll = true;
+  }
+
+  private buildBranchNamePrompt(issue: LinearIssue): string {
+    const desc = issue.description ? `\n\nDescription:\n${issue.description.slice(0, 600)}` : '';
+    return `Generate a git branch name for the following Linear issue using this exact format:
+
+{prefix}/LIN#{number}-{3-to-6-word-kebab-summary}
+
+Rules:
+- prefix: use "fix" if the issue is a bug/fix/error, otherwise use "feature"
+- number: the digits from the identifier (e.g. LIN-228 → 228)
+- summary: 3–6 significant lowercase words from the title, kebab-cased, stop-words removed (a, an, the, and, or, for, to, of, in, on, at, with, by, from)
+
+Examples:
+- feature/LIN#228-add-new-tooltips-for-navigation
+- fix/LIN#301-broken-login-redirect
+
+Issue:
+Identifier: ${issue.identifier}
+Title: ${issue.title}
+State: ${issue.state.name}${desc}
+
+Respond with only the branch name on a single line, nothing else.`;
   }
 
   private buildSprintRetroPrompt(): string {

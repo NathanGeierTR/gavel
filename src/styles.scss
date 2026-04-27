@@ -145,9 +145,16 @@ button {
   }
   
   &-secondary {
-    color: #fff;
-    background-color: $secondary-color;
-    border-color: $secondary-color;
+    background: var(--saf-color-background-default);
+    color: var(--saf-color-text-strong);
+    border: 1px solid var(--saf-color-line-subtle);
+    padding: 0.5rem 0.75rem;
+    border-radius: 100px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 10px;
     
     &:hover {
       background-color: darken($secondary-color, 10%);

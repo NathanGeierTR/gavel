@@ -6,7 +6,7 @@
   </div>
 
   <!-- ── Conversation ─────────────────────────────────────────── -->
-  <div class="conversation-wrapper" #chatContainer [class.expanded]="conversationExpanded" *ngIf="conversationHistory.length > 0 || loading || anySkillLoading">
+  <div class="conversation-wrapper" #chatContainer [class.expanded]="conversationExpanded" *ngIf="conversationHistory.length > 0 || loading || anySkillLoading || showBranchPicker">
     <div class="conversation-fade-top" *ngIf="!conversationExpanded"></div>
     <button
       type="button"
@@ -52,7 +52,7 @@
             class="msg-copy-btn"
             (click)="copyMessage(msg.content, i)"
             [appTouchTooltip]="copiedMsgIndex === i ? 'Copied!' : 'Copy'"
-            tooltipAlign="bottom-right"
+            tooltipAlign="left"
             [attr.aria-label]="copiedMsgIndex === i ? 'Copied!' : 'Copy message'">
             <i class="fas" [class.fa-check]="copiedMsgIndex === i" [class.fa-copy]="copiedMsgIndex !== i"></i>
           </button>
@@ -92,6 +92,35 @@
           <span></span><span></span><span></span>
         </div>
       </div>
+
+      <!-- Branch name issue picker (agent message style) -->
+      <div class="msg assistant msg-new" *ngIf="showBranchPicker">
+        <div class="msg-meta">
+          <span class="msg-label">Agent</span>
+        </div>
+        <div class="msg-body branch-picker-body">
+          <div class="branch-picker-question">
+            <i class="fas fa-code-branch"></i>
+            Which issue is this branch for?
+          </div>
+          <div class="branch-picker-empty" *ngIf="branchIssues.length === 0">
+            <i class="fas fa-inbox"></i>
+            No active Linear issues found. Connect Linear or check your widget is loaded.
+          </div>
+          <button
+            *ngFor="let issue of branchIssues"
+            type="button"
+            class="branch-issue-item btn-secondary"
+            (click)="pickBranchIssue(issue)">
+            <span class="branch-issue-id">{{ issue.identifier }}</span>
+            <span class="branch-issue-title">{{ issue.title }}</span>
+            <span class="branch-issue-state">{{ issue.state.name }}</span>
+          </button>
+        </div>
+        <button type="button" class="msg-copy-btn" (click)="cancelBranchPicker()" aria-label="Cancel" [appTouchTooltip]="'Cancel'" tooltipAlign="left">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
     </div>
   </div>
 
@@ -121,12 +150,12 @@
           <i class="fas fa-database"></i>
         </button>
         <span class="toolbar-divider"></span>
-        <div class="skills-dropdown-wrapper" #skillsDropdownWrapper>
+          <div class="skills-dropdown-wrapper" #skillsDropdownWrapper [class.drop-up]="skillsDropdownUp">
           <button
             type="button"
             class="toolbar-skills-btn"
             [class.open]="showSkillsDropdown"
-            (click)="showSkillsDropdown = !showSkillsDropdown"
+            (click)="toggleSkillsDropdown()"
             [disabled]="loading || anySkillLoading">
             <i class="fas fa-bolt"></i>
             Skills

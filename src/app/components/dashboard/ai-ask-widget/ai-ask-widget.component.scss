@@ -169,6 +169,12 @@
   z-index: 100;
   overflow: hidden;
   animation: fade-down 0.15s ease both;
+
+  .drop-up & {
+    top: auto;
+    bottom: calc(100% + 8px);
+    animation-name: fade-up;
+  }
 }
 
 .skill-dropdown-item {
@@ -591,6 +597,10 @@
       border-radius: 12px;
       padding: 0 12px;
       white-space: pre-wrap;
+
+      &.branch-picker-body {
+        padding: 12px;
+      }
     }
   }
 
@@ -672,9 +682,7 @@
   strong { color: var(--saf-color-text-default, #444); }
 }
 
-// ── Disclaimer ──────────────────────────────────────────────────
-
-.ai-disclaimer {
+.not-configured {
   font-size: 0.72rem;
   color: var(--saf-color-text-subtle, #aaa);
   text-align: center;
@@ -682,6 +690,77 @@
 }
 
 // ── Animations ──────────────────────────────────────────────────
+
+// ── Branch name issue picker (inside agent message) ─────────────
+
+.branch-picker-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0;
+  overflow: hidden;
+  border-radius: 8px;
+  border: 1px solid var(--saf-color-border-subtle, #e0e0e0);
+}
+
+.branch-picker-question {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--saf-color-text-default, #333);
+  
+  i { color: var(--saf-color-brand-racing-green-600, #314b3e); }
+}
+
+.branch-picker-empty {
+  padding: 14px 12px;
+  font-size: 0.82rem;
+  color: var(--saf-color-text-subtle, #888);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--saf-color-background-default, #fff);
+}
+
+.branch-issue-item {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  width: 100%;
+  padding: 9px 14px;
+  cursor: pointer;
+  text-align: left;
+  transition: border 0.15s, background 0.15s;
+
+  &:hover { background: var(--saf-color-background-hover, #f0f0f0); }
+
+  .branch-issue-id {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--saf-color-brand-racing-green-600, #314b3e);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .branch-issue-title {
+    font-size: 0.83rem;
+    color: var(--saf-color-text-default, #333);
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .branch-issue-state {
+    font-size: 0.72rem;
+    color: var(--saf-color-text-subtle, #888);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+}
 
 @keyframes fade-up {
   from { opacity: 0; transform: translateY(8px); }

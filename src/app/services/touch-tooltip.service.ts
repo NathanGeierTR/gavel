@@ -35,51 +35,49 @@ export class TouchTooltipService implements OnDestroy {
     el.style.display = '';
     el.style.transform = '';
 
-    const sx = window.scrollX;
-    const sy = window.scrollY;
     const gap = 6;
-    const cx = rect.left + sx + rect.width / 2;
-    const cy = rect.top + sy + rect.height / 2;
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
 
     switch (align) {
       case 'top':
         el.style.left = `${cx}px`;
-        el.style.top = `${rect.top + sy - gap}px`;
+        el.style.top = `${rect.top - gap}px`;
         el.style.transform = 'translate(-50%, -100%)';
         break;
       case 'top-right':
-        el.style.left = `${rect.right + sx}px`;
-        el.style.top = `${rect.top + sy - gap}px`;
+        el.style.left = `${rect.right}px`;
+        el.style.top = `${rect.top - gap}px`;
         el.style.transform = 'translateY(-100%)';
         break;
       case 'right':
-        el.style.left = `${rect.right + sx + gap}px`;
+        el.style.left = `${rect.right + gap}px`;
         el.style.top = `${cy}px`;
         el.style.transform = 'translateY(-50%)';
         break;
       case 'bottom-right':
-        el.style.left = `${rect.right + sx}px`;
-        el.style.top = `${rect.bottom + sy + gap}px`;
+        el.style.left = `${rect.right}px`;
+        el.style.top = `${rect.bottom + gap}px`;
         el.style.transform = 'none';
         break;
       case 'bottom':
         el.style.left = `${cx}px`;
-        el.style.top = `${rect.bottom + sy + gap}px`;
+        el.style.top = `${rect.bottom + gap}px`;
         el.style.transform = 'translateX(-50%)';
         break;
       case 'bottom-left':
-        el.style.left = `${rect.left + sx}px`;
-        el.style.top = `${rect.bottom + sy + gap}px`;
+        el.style.left = `${rect.left}px`;
+        el.style.top = `${rect.bottom + gap}px`;
         el.style.transform = 'translateX(-100%)';
         break;
       case 'left':
-        el.style.left = `${rect.left + sx - gap}px`;
+        el.style.left = `${rect.left - gap}px`;
         el.style.top = `${cy}px`;
         el.style.transform = 'translate(-100%, -50%)';
         break;
       case 'top-left':
-        el.style.left = `${rect.left + sx}px`;
-        el.style.top = `${rect.top + sy - gap}px`;
+        el.style.left = `${rect.left}px`;
+        el.style.top = `${rect.top - gap}px`;
         el.style.transform = 'translate(-100%, -100%)';
         break;
     }
