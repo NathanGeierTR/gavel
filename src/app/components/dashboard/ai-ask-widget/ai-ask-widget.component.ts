@@ -70,7 +70,7 @@ export class AiAskWidgetComponent implements OnInit, OnDestroy, AfterViewChecked
     { id: 'daily-summary', label: 'Daily Summary',  icon: 'fas fa-wand-sparkles',        description: 'Motivational overview + top priorities for today', loading: false },
     { id: 'scrum-update',  label: 'Scrum Update',   icon: 'fas fa-users',                description: 'Standup update drafted from journal entries',   loading: false },
     { id: 'sprint-retro',  label: 'Sprint Retro',   icon: 'fas fa-chart-bar',            description: 'Retro board suggestions based on your sprint activity', loading: false },
-    { id: 'branch-name',   label: 'Branch Name',    icon: 'fas fa-code-branch',          description: 'Generate a git branch name from a Linear issue', loading: false },
+    { id: 'branch-name',   label: 'Branch & PR Setup', icon: 'fas fa-code-branch',       description: 'Generate branch name, PR title, PR body, and Slack announcement from a Linear issue', loading: false },
     { id: 'view-triage',   label: 'Issue Suggestions', icon: 'fas fa-magnifying-glass-chart', description: 'Recommend issues from a Linear view that fit your engineering profile', loading: false },
   ];
 
@@ -473,7 +473,80 @@ export class AiAskWidgetComponent implements OnInit, OnDestroy, AfterViewChecked
     const skill = this.skills.find(s => s.id === 'branch-name')!;
     skill.loading = true;
     this.error = null;
-    this.sendMessage(this.buildBranchNamePrompt(issue), skill);
+
+    // Add a single user message for the whole skill invocation
+    const userMsg: ChatMessage = {
+      role: 'user',
+      content: `Branch & PR Setup for ${issue.identifier}: ${issue.title}`,
+      timestamp: new Date(),
+      skillLabel: skill.label,
+      skillDescription: skill.description,
+      skillPrompt: `Branch & PR Setup for ${issue.identifier}: ${issue.title}`
+    };
+    this.conversationHistory = [...this.conversationHistory, userMsg];
+    this.shouldScroll = true;
+
+    const issueCtx = this.buildIssueContext(issue);
+    const steps = this.buildBranchSetupSteps(issue, issueCtx);
+    const systemMsg: ChatMessage = { role: 'system', content: this.buildSystemContext(), timestamp: new Date() };
+    this.sendNextBranchStep(steps, 0, systemMsg, skill);
+  }
+
+  private buildIssueContext(issue: LinearIssue): string {
+    const desc = issue.description ? `\n\nDescription:\n${issue.description.slice(0, 600)}` : '';
+    return `Issue:\nIdentifier: ${issue.identifier}\nTitle: ${issue.title}\nState: ${issue.state.name}\nURL: ${issue.url}${desc}`;
+  }
+
+  private buildBranchSetupSteps(issue: LinearIssue, ctx: string): { label: string; prompt: string }[] {
+    return [
+      {
+        label: 'Branch Name',
+        prompt: `${ctx}\n\nGenerate only the git branch name using this format: \`{prefix}/LIN#{number}-{3-to-6-word-kebab-summary}\`\nRules:\n- prefix: "fix" for bugs/errors/crashes, otherwise "feature"\n- number: digits from the identifier (e.g. LIN-228 → 228)\n- summary: 3–6 significant lowercase kebab-cased words, stop-words removed (a, an, the, and, or, for, to, of, in, on, at, with, by, from)\n\nRespond with only the branch name in a fenced code block. Nothing else.`
+      },
+      {
+        label: 'PR Title',
+        prompt: `${ctx}\n\nGenerate only the PR title using this format: ${issue.identifier} - Imperative-verb phrase\nExample: ${issue.identifier} - Add tooltip navigation improvements\nRespond with only the PR title on a single line. Nothing else.`
+      },
+      {
+        label: 'PR Body',
+        prompt: `${ctx}\n\nGenerate only the PR body using this markdown template, filled in based on the issue context. Keep bullets concise.\n\nLinear issue [${issue.identifier}](${issue.url})\n\n## Changes\n- \n\n## Before\n\n\n## After\n\n\n## How Has This Been Tested?\n- Manual testing in development UI\n\nReturn the filled-in markdown only, wrapped in a fenced code block. No preamble.`
+      },
+      {
+        label: 'Slack Announcement',
+        prompt: `${ctx}\n\nWrite only a short Slack message announcing a PR is ready for review. Use this format exactly, substituting the real PR title:\nHi team, got a PR regarding [${issue.identifier}]([PR URL]) if you've got time for a quick look.\nReturn only the message text. Nothing else.`
+      }
+    ];
+  }
+
+  private sendNextBranchStep(
+    steps: { label: string; prompt: string }[],
+    index: number,
+    systemMsg: ChatMessage,
+    skill: Skill
+  ): void {
+    if (index >= steps.length) {
+      skill.loading = false;
+      this.saveChatHistory();
+      return;
+    }
+    const step = steps[index];
+    const stepUserMsg: ChatMessage = { role: 'user', content: step.prompt, timestamp: new Date() };
+    this.aiService.sendMessage(step.prompt, [systemMsg, stepUserMsg])
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          const assistantMsg: ChatMessage = { role: 'assistant', content: response, timestamp: new Date() };
+          this.conversationHistory = [...this.conversationHistory, assistantMsg];
+          this.shouldScroll = true;
+          this.animatingMessages.add(assistantMsg);
+          setTimeout(() => this.animatingMessages.delete(assistantMsg), 750);
+          this.sendNextBranchStep(steps, index + 1, systemMsg, skill);
+        },
+        error: (err) => {
+          this.error = err.message || 'Failed to generate PR setup. Please try again.';
+          skill.loading = false;
+        }
+      });
   }
 
   cancelBranchPicker(): void {
@@ -582,29 +655,6 @@ export class AiAskWidgetComponent implements OnInit, OnDestroy, AfterViewChecked
     lines.push(`\nRespond with a numbered list. For each of your 3–5 picks: link the issue identifier (e.g. [LIN-123](url)), give a 1-sentence skill-match reason, and note any complexity or risk. Order best-fit first.`);
 
     return lines.join('\n');
-  }
-
-  private buildBranchNamePrompt(issue: LinearIssue): string {
-    const desc = issue.description ? `\n\nDescription:\n${issue.description.slice(0, 600)}` : '';
-    return `Generate a git branch name for the following Linear issue using this exact format:
-
-{prefix}/LIN#{number}-{3-to-6-word-kebab-summary}
-
-Rules:
-- prefix: use "fix" if the issue is a bug/fix/error, otherwise use "feature"
-- number: the digits from the identifier (e.g. LIN-228 → 228)
-- summary: 3–6 significant lowercase words from the title, kebab-cased, stop-words removed (a, an, the, and, or, for, to, of, in, on, at, with, by, from)
-
-Examples:
-- feature/LIN#228-add-new-tooltips-for-navigation
-- fix/LIN#301-broken-login-redirect
-
-Issue:
-Identifier: ${issue.identifier}
-Title: ${issue.title}
-State: ${issue.state.name}${desc}
-
-Respond with only the branch name on a single line, nothing else.`;
   }
 
   private buildSprintRetroPrompt(): string {
