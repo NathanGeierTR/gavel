@@ -501,19 +501,35 @@ export class AiAskWidgetComponent implements OnInit, OnDestroy, AfterViewChecked
     return [
       {
         label: 'Branch Name',
-        prompt: `${ctx}\n\nGenerate only the git branch name using this format: \`{prefix}/LIN#{number}-{3-to-6-word-kebab-summary}\`\nRules:\n- prefix: "fix" for bugs/errors/crashes, otherwise "feature"\n- number: digits from the identifier (e.g. LIN-228 → 228)\n- summary: 3–6 significant lowercase kebab-cased words, stop-words removed (a, an, the, and, or, for, to, of, in, on, at, with, by, from)\n\nRespond with only the branch name in a fenced code block. Nothing else.`
+        prompt: `${ctx}\n\nGenerate only the git branch name using this format: 
+          {prefix}/COCONXT#{number}-{3-to-6-word-kebab-summary}\nRules:\n- 
+          prefix: "fix" for bugs/errors/crashes, otherwise "feature"\n- 
+          number: digits from the identifier (e.g. COCONXT-228 → 228)\n- 
+          summary: 3–6 significant lowercase kebab-cased words, stop-words removed (a, an, the, and, or, for, to, of, in, on, at, with, by, from)\n\n
+          Respond with only the branch name as plain text on a single line. Nothing else.`
       },
       {
         label: 'PR Title',
-        prompt: `${ctx}\n\nGenerate only the PR title using this format: ${issue.identifier} - Imperative-verb phrase\nExample: ${issue.identifier} - Add tooltip navigation improvements\nRespond with only the PR title on a single line. Nothing else.`
+        prompt: `${ctx}\n\nGenerate only the PR title using this format: 
+          ${issue.identifier} - Imperative-verb phrase\nExample: ${issue.identifier} - 
+          Add tooltip navigation improvements\nRespond with only the PR title on a single line. Nothing else.`
       },
       {
         label: 'PR Body',
-        prompt: `${ctx}\n\nGenerate only the PR body using this markdown template, filled in based on the issue context. Keep bullets concise.\n\nLinear issue [${issue.identifier}](${issue.url})\n\n## Changes\n- \n\n## Before\n\n\n## After\n\n\n## How Has This Been Tested?\n- Manual testing in development UI\n\nReturn the filled-in markdown only, wrapped in a fenced code block. No preamble.`
+        prompt: `${ctx}\n\nGenerate only the PR body using this markdown template, 
+          with all the sections empty except the 'Changes' section filled in based on the issue context. 
+          Keep the bullets concise. Keep the output completely in raw markdown, 
+          so it can be pasted into the GitHub PR body directly.\n\n
+          Addresses issue [${issue.identifier}](${issue.url})\n\n
+          ## Changes\n- \n\n## Before\n\n\n## After\n\n\n## How Has This Been Tested?\n- [ ] Manual testing in development UI\n\n
+          Return the filled-in markdown only. Do NOT wrap it in a fenced code block. No preamble.`
       },
       {
         label: 'Slack Announcement',
-        prompt: `${ctx}\n\nWrite only a short Slack message announcing a PR is ready for review. Use this format exactly, substituting the real PR title:\nHi team, got a PR regarding [${issue.identifier}]([PR URL]) if you've got time for a quick look.\nReturn only the message text. Nothing else.`
+        prompt: `${ctx}\n\nWrite only a short Slack message announcing a PR is ready for review. 
+          Use this format exactly, substituting the real PR title:\n
+          Hi team, got a PR ready regarding {3-to-6-word-general-summary} if you've got time for a quick look. It addresses [${issue.identifier}]([PR URL]).\n
+          Return only the message text with the generated 3-to-6-word-general-summary. Nothing else.`
       }
     ];
   }
@@ -663,7 +679,7 @@ export class AiAskWidgetComponent implements OnInit, OnDestroy, AfterViewChecked
       this.error = 'No sprint data found — add some journal entries or tasks first!';
       return '';
     }
-    return `Based on my activity over the past sprint (roughly the last 2 weeks), generate concise retro board suggestions for each of the following 5 categories. For each category, provide 2-3 brief bullet points (1 sentence each). Draw from my journal entries, completed tasks, calendar meetings, ADO work items, and any coworker interactions.
+    return `Based on my activity over the past sprint (roughly the last 2 weeks), generate concise retro board suggestions for each of the following 5 categories. For each category, provide 2-3 brief bullet points (1 sentence each). Draw from my journal entries, completed tasks, calendar meetings, Linear work items, and any coworker interactions.
 
     Format the response exactly like this (use these exact category headings):
 
@@ -687,11 +703,11 @@ export class AiAskWidgetComponent implements OnInit, OnDestroy, AfterViewChecked
 
   private buildDailySummaryPrompt(): string {
     return `Give me a motivational daily briefing based on my dashboard data. Start with a casual, energizing greeting (use some bro-speak). Then provide:
-1. A 1-2 sentence overview of my day
-2. My top 3-5 priorities to focus on
-3. A one-line callout if any of today's tasks connect to my yearly goals
+      1. A 1-2 sentence overview of my day
+      2. My top 3-5 priorities to focus on
+      3. A one-line callout if any of today's tasks connect to my yearly goals
 
-When referencing ADO work items, make them clickable markdown links. Keep it concise and actionable. Respond in plain markdown (no JSON).`;
+      When referencing ADO work items, make them clickable markdown links. Keep it concise and actionable. Respond in plain markdown (no JSON).`;
   }
 
   private buildScrumPrompt(): string {
