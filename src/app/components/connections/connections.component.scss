@@ -239,6 +239,32 @@
       font-size: 0.78rem;
     }
   }
+
+  .scope-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 6px;
+  }
+
+  .scope-chip {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 100px;
+    font-size: 0.72rem;
+    font-family: monospace;
+    font-weight: 600;
+    background: var(--saf-color-background-subtle, #f5f5f5);
+    border: 1px solid var(--saf-color-line-subtle, #e5e7eb);
+    color: var(--saf-color-text-default);
+    cursor: default;
+
+    &.required {
+      background: #fdf4ff;
+      border-color: #d8b4fe;
+      color: #4a154b;
+    }
+  }
 }
 
 .verified-identity {

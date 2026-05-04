@@ -28,5 +28,13 @@
     "pathRewrite": {
       "^/linear-api": ""
     }
+  },
+  "/slack-api/**": {
+    "target": "https://slack.com/api",
+    "secure": false,
+    "changeOrigin": true,
+    "pathRewrite": {
+      "^/slack-api": ""
+    }
   }
 }

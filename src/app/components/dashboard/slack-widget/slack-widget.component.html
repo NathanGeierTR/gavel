@@ -1,0 +1,226 @@
+<div class="slack-widget">
+
+  <!-- ── Header ─────────────────────────────────────────────── -->
+  <div class="widget-header">
+    <div class="widget-header-title">
+      <h2 class="widget-title">
+        <i class="fab fa-slack widget-icon" aria-hidden="true"></i>
+        Slack
+      </h2>
+    </div>
+
+    <div class="widget-toolbar">
+      <button
+        type="button"
+        class="btn-menu-toggle"
+        [class.active]="showUnreadOnly"
+        (click)="toggleUnreadOnly()"
+        [disabled]="!isConfigured"
+        [appTouchTooltip]="showUnreadOnly ? 'Showing unread only' : 'Showing all'"
+        tooltipAlign="top"
+        [attr.aria-pressed]="showUnreadOnly"
+        aria-label="Toggle unread only">
+        <i class="fas fa-envelope" aria-hidden="true"></i>
+      </button>
+      <button
+        type="button"
+        class="btn-menu-toggle"
+        (click)="toggleItemVisibility()"
+        [disabled]="!isConfigured"
+        [appTouchTooltip]="itemsHidden ? 'Show items' : 'Hide all'"
+        tooltipAlign="top"
+        [attr.aria-label]="itemsHidden ? 'Show items' : 'Hide all'">
+        <i class="fas" [class.fa-eye-slash]="!itemsHidden" [class.fa-eye]="itemsHidden" aria-hidden="true"></i>
+      </button>
+      <button
+        type="button"
+        class="btn-menu-toggle"
+        (click)="loadChannels()"
+        [disabled]="loading || !isConfigured"
+        appTouchTooltip="Refresh"
+        tooltipAlign="top"
+        aria-label="Refresh">
+        <i class="fas" [class.fa-spinner]="loading" [class.fa-spin]="loading" [class.fa-rotate]="!loading" aria-hidden="true"></i>
+      </button>
+      <button
+        type="button"
+        class="btn-menu-toggle"
+        [class.active]="showFilterPanel"
+        (click)="toggleFilterPanel()"
+        [disabled]="!isConfigured || channels.length === 0"
+        appTouchTooltip="Filter channels"
+        tooltipAlign="top"
+        aria-label="Filter channels">
+        <i class="fas fa-sliders" aria-hidden="true"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── View tabs ───────────────────────────────────────────── -->
+  <div class="view-tabs" *ngIf="isConfigured">
+    <button type="button" class="tab-btn" [class.active]="activeView === 'channels'" (click)="switchView('channels')">
+      <i class="fas fa-hashtag" aria-hidden="true"></i> Channels
+      <span class="tab-badge" *ngIf="unreadChannelCount > 0">{{ unreadChannelCount }}</span>
+    </button>
+    <button type="button" class="tab-btn" [class.active]="activeView === 'dms'" (click)="switchView('dms')">
+      <i class="fas fa-comment" aria-hidden="true"></i> DMs
+      <span class="tab-badge" *ngIf="unreadDmCount > 0">{{ unreadDmCount }}</span>
+    </button>
+  </div>
+
+  <!-- ── Not connected ──────────────────────────────────────── -->
+  <div class="not-configured" *ngIf="!isConfigured">
+    <i class="fab fa-slack"></i>
+    <p>Connect your Slack workspace to see channels and messages.</p>
+    <button type="button" class="btn-primary" (click)="goToConnections()">
+      <i class="fas fa-plug"></i> Connect Slack
+    </button>
+  </div>
+
+  <!-- ── Error ──────────────────────────────────────────────── -->
+  <div class="error-banner" *ngIf="error && !loading && isConfigured">
+    <i class="fas fa-exclamation-circle"></i>
+    <span>{{ error }}</span>
+    <button type="button" class="btn-retry" (click)="loadChannels()">
+      <i class="fas fa-rotate"></i> Retry
+    </button>
+  </div>
+
+  <!-- ── Loading skeleton ───────────────────────────────────── -->
+  <div class="skeleton-list" *ngIf="loading && channels.length === 0">
+    <div class="skeleton-row" *ngFor="let _ of [1,2,3,4]"></div>
+  </div>
+
+  <!-- ── Filter panel ───────────────────────────────────────── -->
+  <div class="filter-panel" *ngIf="showFilterPanel && channels.length > 0">
+    <div class="filter-panel-title">
+      <i class="fas fa-sliders" aria-hidden="true"></i>
+      {{ filterConfigured ? 'Filter ' + (activeView === 'channels' ? 'channels' : 'DMs') : 'Choose what to show' }}
+    </div>
+    <p class="filter-panel-hint" *ngIf="!filterConfigured">
+      Uncheck anything you don't want to see here, then click Done.
+    </p>
+
+    <!-- Select all -->
+    <label class="channel-filter-row channel-filter-all">
+      <input
+        type="checkbox"
+        [checked]="allFilterListSelected"
+        [indeterminate]="someFilterListSelected"
+        (change)="toggleAllFilter()"
+        aria-label="Select or deselect all" />
+      <span><strong>{{ allFilterListSelected ? 'Deselect all' : 'Select all' }}</strong></span>
+    </label>
+    <hr class="filter-divider" />
+
+    <label
+      class="channel-filter-row"
+      *ngFor="let ch of (activeView === 'channels' ? channelList : dmList)">
+      <input
+        type="checkbox"
+        [checked]="isChannelVisible(ch.id)"
+        (change)="toggleChannelFilter(ch.id)"
+        [attr.aria-label]="getChannelName(ch)" />
+      <i class="fas {{ getChannelIcon(ch) }} filter-ch-icon" aria-hidden="true"></i>
+      <span class="filter-ch-name">{{ getChannelName(ch) }}</span>
+      <span class="unread-pill" *ngIf="(ch.unreadCount ?? 0) > 0">{{ ch.unreadCount }}</span>
+    </label>
+
+    <div class="filter-panel-actions">
+      <button type="button" class="btn-primary btn-sm" (click)="confirmFilter()">
+        <i class="fas fa-check" aria-hidden="true"></i> Done
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Empty state ────────────────────────────────────────── -->
+  <div class="empty-state"
+    *ngIf="!loading && isConfigured && filteredChannels.length === 0 && !error && !showFilterPanel">
+    <i class="fab fa-slack"></i>
+    <p *ngIf="showUnreadOnly && (activeView === 'channels' ? channelList : dmList).length > 0">
+      No unread {{ activeView === 'channels' ? 'channels' : 'DMs' }}.
+      <button type="button" class="btn-link" (click)="toggleUnreadOnly()">Show all</button>
+    </p>
+    <p *ngIf="!showUnreadOnly || (activeView === 'channels' ? channelList : dmList).length === 0">
+      No {{ activeView === 'channels' ? 'channels' : 'DMs' }} to show.
+    </p>
+  </div>
+
+  <!-- ── Channel / DM list ──────────────────────────────────── -->
+  <div class="channel-list"
+    *ngIf="isConfigured && filteredChannels.length > 0 && !itemsHidden && (!showFilterPanel || filterConfigured)">
+
+    <div
+      *ngFor="let ch of filteredChannels"
+      class="channel-item"
+      [class.expanded]="isExpanded(ch.id)">
+
+      <!-- Summary row -->
+      <div
+        class="channel-summary"
+        (click)="toggleChannel(ch)"
+        (keydown.enter)="toggleChannel(ch)"
+        (keydown.space)="toggleChannel(ch); $event.preventDefault()"
+        role="button"
+        tabindex="0"
+        [attr.aria-expanded]="isExpanded(ch.id)"
+        [attr.aria-label]="getChannelName(ch)">
+
+        <span class="channel-icon" [class.is-dm]="ch.type === 'im'" aria-hidden="true">
+          <i class="fas {{ getChannelIcon(ch) }}"></i>
+        </span>
+
+        <div class="channel-summary-content">
+          <span class="channel-name">
+            {{ getChannelName(ch) }}
+            <span class="unread-pill" *ngIf="(ch.unreadCount ?? 0) > 0">{{ ch.unreadCount }}</span>
+          </span>
+          <span class="channel-preview" *ngIf="getPreview(ch)">{{ getPreview(ch) }}</span>
+        </div>
+
+        <span class="channel-time" *ngIf="ch.latestMessage">
+          {{ formatTime(ch.latestMessage.ts) }}
+        </span>
+
+        <button
+          type="button"
+          class="open-channel-btn"
+          (click)="openInSlack(ch); $event.stopPropagation()"
+          [attr.aria-label]="'Open ' + getChannelName(ch) + ' in Slack'">
+          <i class="fas fa-arrow-up-right-from-square" aria-hidden="true"></i>
+        </button>
+
+        <i class="fas fa-chevron-down summary-chevron" aria-hidden="true"></i>
+      </div>
+
+      <!-- Expanded messages -->
+      <div class="channel-messages" *ngIf="isExpanded(ch.id)">
+        <div class="messages-loading" *ngIf="isLoadingMessages(ch.id)">
+          <i class="fas fa-spinner fa-spin"></i> Loading messages…
+        </div>
+        <div class="error-banner inline-error" *ngIf="!isLoadingMessages(ch.id) && ch.loadError">
+          <i class="fas fa-exclamation-circle"></i>
+          <span>{{ ch.loadError }}</span>
+          <button type="button" class="btn-retry" (click)="retryMessages(ch)">
+            <i class="fas fa-rotate"></i> Retry
+          </button>
+        </div>
+        <div class="messages-empty" *ngIf="!isLoadingMessages(ch.id) && !ch.loadError && ch.messages?.length === 0">
+          <i class="fas fa-comment-slash" aria-hidden="true"></i> No recent messages.
+        </div>
+        <div class="message-thread"
+          *ngIf="!isLoadingMessages(ch.id) && !ch.loadError && ch.messages && ch.messages.length > 0">
+          <div *ngFor="let msg of ch.messages" class="message-bubble">
+            <div class="bubble-header">
+              <span class="bubble-sender">{{ msg.displayName ?? msg.username ?? 'Unknown' }}</span>
+              <span class="bubble-time" [title]="formatFullTime(msg.ts)">{{ formatTime(msg.ts) }}</span>
+            </div>
+            <div class="bubble-body" [innerHTML]="renderMessageText(msg)"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>

@@ -9,6 +9,7 @@ import { MicrosoftCalendarService } from '../../services/microsoft-calendar.serv
 import { MicrosoftMailService } from '../../services/microsoft-mail.service';
 import { MicrosoftTeamsService } from '../../services/microsoft-teams.service';
 import { LinearService } from '../../services/linear.service';
+import { SlackService } from '../../services/slack.service';
 
 @Component({
   selector: 'app-connections',
@@ -56,6 +57,11 @@ export class ConnectionsComponent implements OnInit, OnDestroy {
   adoProjects: { organization: string; project: string }[] = [];
   adoWidgetVisible = true;
 
+  // Slack
+  slackToken = '';
+  slackConnected = false;
+  slackSaved = false;
+
   // Linear
   linearApiKey = '';
   linearConnected = false;
@@ -83,7 +89,8 @@ export class ConnectionsComponent implements OnInit, OnDestroy {
     private calendarService: MicrosoftCalendarService,
     private mailService: MicrosoftMailService,
     private teamsService: MicrosoftTeamsService,
-    private linearService: LinearService
+    private linearService: LinearService,
+    private slackService: SlackService
   ) {}
 
   ngOnInit(): void {
@@ -147,6 +154,10 @@ export class ConnectionsComponent implements OnInit, OnDestroy {
       this.adoProjects = [];
     }
     this.adoWidgetVisible = localStorage.getItem('ado-widget-visible') !== 'false';
+
+    // Slack
+    this.slackToken = localStorage.getItem('slack-token') || '';
+    this.slackConnected = !!this.slackToken;
 
     // Linear
     this.linearApiKey = localStorage.getItem('linear-api-key') || '';
@@ -307,5 +318,21 @@ export class ConnectionsComponent implements OnInit, OnDestroy {
     this.linearApiKey = '';
     this.linearConnected = false;
     this.linearViewerName = null;
+  }
+
+  // Slack
+  saveSlack(): void {
+    const token = this.slackToken.trim();
+    if (!token) return;
+    this.slackService.setToken(token);
+    this.slackConnected = true;
+    this.slackSaved = true;
+    setTimeout(() => (this.slackSaved = false), 3000);
+  }
+
+  disconnectSlack(): void {
+    this.slackService.clearToken();
+    this.slackToken = '';
+    this.slackConnected = false;
   }
 }

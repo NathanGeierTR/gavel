@@ -484,5 +484,66 @@
         </button>
       </div>
     </div>
+
+    <!-- ── Slack ─────────────────────────────────────────────── -->
+    <div class="connection-card" [class.connected]="slackConnected" [class.expanded]="isExpanded('slack')">
+      <div class="card-header" (click)="toggleCard('slack')" (keydown.enter)="toggleCard('slack')" (keydown.space)="toggleCard('slack'); $event.preventDefault()" role="button" tabindex="0" [attr.aria-expanded]="isExpanded('slack')">
+        <div class="service-identity">
+          <i class="fab fa-slack card-icon slack-icon" style="color:#4a154b"></i>
+          <div>
+            <h3>Slack</h3>
+            <span class="service-description">Channels &amp; direct messages from your workspace</span>
+          </div>
+        </div>
+        <div class="header-right">
+          <span class="status-badge" [class.connected]="slackConnected" [class.disconnected]="!slackConnected">
+            <i class="fas" [class.fa-circle-check]="slackConnected" [class.fa-circle-xmark]="!slackConnected"></i>
+            {{ slackConnected ? 'Connected' : 'Not connected' }}
+          </span>
+          <i class="fas fa-chevron-down toggle-chevron"></i>
+        </div>
+      </div>
+
+      <div class="card-body">
+        <div class="help-link">
+          <a href="https://api.slack.com/apps" target="_blank" rel="noopener noreferrer">
+            <i class="fas fa-external-link-alt"></i> Slack API Apps
+          </a>
+          <span class="scope-note">
+            <strong>Setup:</strong> Create or open an app →
+            <strong>OAuth &amp; Permissions</strong> → scroll to
+            <strong>User Token Scopes</strong> (not Bot Token Scopes) → add all scopes below →
+            <strong>Install to Workspace</strong> → copy the <strong>User OAuth Token</strong> (<code>xoxp-…</code>)
+          </span>
+        </div>
+        <div class="scope-list">
+          <span class="scope-chip required" title="List public channels">channels:read</span>
+          <span class="scope-chip required" title="List private channels">groups:read</span>
+          <span class="scope-chip required" title="List direct messages">im:read</span>
+          <span class="scope-chip required" title="List group DMs">mpim:read</span>
+          <span class="scope-chip required" title="Read messages in public channels">channels:history</span>
+          <span class="scope-chip required" title="Read messages in private channels">groups:history</span>
+          <span class="scope-chip required" title="Read direct messages">im:history</span>
+          <span class="scope-chip required" title="Read group DM messages">mpim:history</span>
+          <span class="scope-chip required" title="Resolve user display names">users:read</span>
+        </div>
+        <div class="form-group">
+          <label for="slack-token">Slack User OAuth Token</label>
+          <textarea id="slack-token" [(ngModel)]="slackToken"
+                    placeholder="xoxp-..." rows="2" class="token-input"
+                    autocomplete="off"></textarea>
+        </div>
+      </div>
+
+      <div class="card-actions">
+        <button class="btn-save" (click)="saveSlack()" [disabled]="!slackToken.trim()">
+          <i class="fas" [class.fa-check]="slackSaved" [class.fa-save]="!slackSaved"></i>
+          {{ slackSaved ? 'Saved!' : 'Save' }}
+        </button>
+        <button class="btn-disconnect" (click)="disconnectSlack()" [disabled]="!slackConnected">
+          <i class="fas fa-unlink"></i> Disconnect
+        </button>
+      </div>
+    </div>
   </div>
 </div>
